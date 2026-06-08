@@ -3,21 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity Recommendation Engine</title>
+    <title>Cloud Activity Picker</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bitcount+Single:wght@100..900&display=swap');
+
         :root {
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --primary: #4a90e2;
-            --success: #2ec4b6;
-            --danger: #e71d36;
-            --text: #2b2d42;
-            --text-light: #6c757d;
+            --bg-color: #5f3d25;
+            --card-bg: #a16a4b;
+            --primary: #b1c2a8;
+            --success: #2ca734;
+            --danger: #f96f5d;
+            --text: #20140d;
+            --text-light: #86e098;
             --border: #e2e8f0;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: "Bitcount Single", system-ui;
+            font-optical-sizing: auto;
+            font-weight: 250;
+            font-style: normal;
             background-color: var(--bg-color);
             color: var(--text);
             margin: 0;
@@ -27,142 +32,133 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
             background: var(--card-bg);
             padding: 30px;
-            border-radius: 12px;
+            border-radius: 24px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        h1, h2, h3 {
-            margin-top: 0;
-            color: var(--text);
+        h1, h2, h3 { 
+            margin-top: 0; 
+            color: var(--text); 
+        }
+        .section { 
+            margin-bottom: 25px; 
+            padding-bottom: 25px; 
+            border-bottom: 1px solid var(--border); 
+        }
+        .hidden { 
+            display: none !important; 
         }
 
-        .section {
-            margin-bottom: 25px;
-            padding-bottom: 25px;
-            border-bottom: 1px solid var(--border);
+        label { 
+            display: block; 
+            font-weight: 600; 
+            margin-bottom: 8px; 
+            margin-top: 15px; 
         }
-
-        .hidden {
-            display: none !important;
-        }
-
-        /* Form elements */
-        label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            margin-top: 15px;
-        }
-
-        select, input, textarea {
+        select, input, textarea { 
             width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-size: 16px;
-            background: #fff;
+            padding: 10px; 
+            border: 1px solid var(--border); 
+            border-radius: 6px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+            background: #fff; 
         }
 
-        /* Buttons */
-        button {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background 0.2s;
-            width: 100%;
-            margin-top: 10px;
+        button { 
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 12px 20px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            transition: background 0.2s; 
+            width: 100%; 
+            margin-top: 10px; }
+
+        button:hover { 
+            opacity: 0.9; 
+        }
+        button:disabled { 
+            background-color: #cbd5e1; 
+            cursor: not-allowed; 
+        }
+        button.secondary { 
+            background-color: transparent; 
+            color: var(--text-light); 
+            border: 1px solid var(--border); 
+        }
+        button.secondary:hover { 
+            background: #f8f9fa; 
+        }
+        .btn-group { 
+            display: flex; 
+            gap: 10px; 
+            margin-top: 15px; 
         }
 
-        button:hover {
-            opacity: 0.9;
-        }
-
-        button.secondary {
-            background-color: transparent;
-            color: var(--text-light);
-            border: 1px solid var(--border);
-        }
-
-        button.secondary:hover {
-            background: #f8f9fa;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        /* UI Blocks */
         .prompt-box {
-            background: #eef1f6;
-            border-left: 4px solid var(--primary);
-            padding: 15px;
-            border-radius: 0 8px 8px 0;
+            background: #eef1f6; 
+            border-left: 4px solid var(--primary); 
+            padding: 15px; 
+            border-radius: 0 8px 8px 0; 
+        }
+        .prompt-box h3 { 
+            margin-bottom: 10px; 
         }
 
-        .prompt-box h3 { margin-bottom: 10px; }
-
-        .item-card {
-            background: #f8f9fa;
-            border: 1px solid var(--border);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+        .item-card { 
+            background: #f8f9fa; 
+            border: 1px solid var(--border); 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 12px; 
+            cursor: pointer; 
+            transition: transform 0.2s, box-shadow 0.2s; 
+        }
+        .item-card:hover { 
+            transform: translateY(-2px); 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05); 
+            border-color: var(--primary); 
+        }
+        .tag-badge { 
+            display: inline-block; 
+            background: #e2e8f0; 
+            padding: 2px 8px; 
+            border-radius: 12px; 
+            font-size: 12px; 
+            margin-right: 5px; 
+            margin-top: 5px; 
+            color: var(--text-light); 
         }
 
-        .item-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-            border-color: var(--primary);
+        #sync-status { 
+            font-size: 12px; 
+            color: var(--text-light); 
+            text-align: right; 
+            margin-top: -10px; 
+            margin-bottom: 15px; 
+            font-weight: 600; 
         }
-
-        .tag-badge {
-            display: inline-block;
-            background: #e2e8f0;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin-right: 5px;
-            margin-top: 5px;
-            color: var(--text-light);
-        }
-
-        /* Simple data table styling */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-        .data-table th, .data-table td {
-            border: 1px solid var(--border);
-            padding: 8px;
-            text-align: left;
-        }
-        .data-table th { background: #f8f9fa; }
+        #sync-status.syncing { color: #e67e22; }
+        #sync-status.success { color: var(--success); }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h1>Activity Picker</h1>
+        <div id="sync-status">Connecting to Cloud...</div>
+        <h1>Activity Picker ☁️</h1>
 
         <div id="screen-prompt" class="section prompt-box hidden">
             <h3>Follow-up Tracker</h3>
-            <p>Did your last activity goes well? <br><strong id="prompt-item-name"></strong></p>
+            <p>Did your last activity go well? <br><strong id="prompt-item-name"></strong></p>
             <div class="btn-group">
                 <button onclick="respondToPrompt(true)" style="background: var(--success)">Yes</button>
                 <button onclick="respondToPrompt(false)" style="background: var(--danger)">No</button>
@@ -195,7 +191,7 @@
                 <option value="Pricey">Pricey</option>
             </select>
 
-            <button onclick="generateChoices()" style="margin-top: 20px;">Generate 3 Choices</button>
+            <button id="btn-generate" onclick="generateChoices()" style="margin-top: 20px;" disabled>Loading Cloud Database...</button>
         </div>
 
         <div id="screen-results" class="section hidden">
@@ -217,7 +213,6 @@
 
         <div class="section">
             <h3>Manage Database</h3>
-            <p style="font-size: 13px; color: var(--text-light)">Add your custom strings and tags below.</p>
             
             <label>Activity Name</label>
             <input type="text" id="add-name" placeholder="e.g., Read a book at the park">
@@ -254,25 +249,27 @@
                 </div>
             </div>
             <button class="secondary" onclick="addItem()" style="margin-top: 15px; border-color: var(--primary); color: var(--primary)">Add to Database</button>
+            <button onclick="resetAllPools()" style="background-color: var(--danger); margin-top: 15px;">Reset All Pools back to Open Pool</button>
 
-            <h4 style="margin-top: 20px; margin-bottom: 5px;">Current Counts:</h4>
+            <h4 style="margin-top: 20px; margin-bottom: 5px;">Current Counts (Cloud-Synced):</h4>
             <div style="font-size: 13px; display: flex; gap: 15px;">
                 <span>Open Pool: <strong id="count-open">0</strong></span>
                 <span>Chosen Pool: <strong id="count-chosen">0</strong></span>
                 <span>Discarded: <strong id="count-discarded">0</strong></span>
             </div>
+            <h4 style="margin-top: 25px; margin-bottom: 10px;">Delete / Edit Items:</h4>
+            <div id="delete-list-container" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: #f8f9fa;">
+                </div>
         </div>
     </div>
 
     <script>
-        // --- DATA ARCHITECTURE & SEED DATA ---
-        let db = {
-            openPool: [],
-            chosenPool: [],
-            discardedPool: []
-        };
+        // === PASTE YOUR LINK HERE ===
+        const CLOUD_URL = "https://kvdb.io/J218YhVUpLE59QfhqJC7yE/"; 
+        const CLOUD_KEY = "picker_db"; // The sub-key inside your bucket
 
-        // Default samples if local storage is fresh
+        let db = { openPool: [], chosenPool: [], discardedPool: [] };
+
         const sampleItems = [
             { id: 1, name: "Skiing or Snowboarding", desc: "Hit the local slopes or find a hill to sled down.", tags: ["Winter", "Active", "Pricey"] },
             { id: 2, name: "Baking Bread", desc: "Try making a sourdough or simple no-knead loaf from scratch.", tags: ["All-Season", "Creative", "Low-Cost"] },
@@ -283,38 +280,116 @@
 
         let currentlyViewingItem = null;
 
-        // --- CORE APPLICATION LOGIC ---
-
-        // Initialize App
+        // Initialize App: Pull from Cloud instead of local storage
         window.onload = function() {
-            loadFromLocalStorage();
-            checkPromptStatus();
-            updateCounts();
+            if (CLOUD_URL.includes("PASTE_YOUR_KVDB_URL")) {
+                alert("Please open this file in a text editor and paste your secret KVdb URL on Line 160!");
+                setStatus("Setup Required", "syncing");
+                return;
+            }
+            pullFromCloud();
         };
 
-        function saveToLocalStorage() {
-            localStorage.setItem('activityApp_db', JSON.stringify(db));
+        function setStatus(text, className) {
+            const statusDiv = document.getElementById('sync-status');
+            statusDiv.innerText = text;
+            statusDiv.className = className;
         }
 
-        function loadFromLocalStorage() {
-            const stored = localStorage.getItem('activityApp_db');
-            if (stored) {
-                db = JSON.parse(stored);
-            } else {
-                db.openPool = sampleItems;
-                saveToLocalStorage();
+        // PULL DATA FROM THE CLOUD
+        async function pullFromCloud() {
+            setStatus("🔄 Pulling latest cloud data...", "syncing");
+            try {
+                // Fetch from the KVdb API endpoint
+                const response = await fetch(`${CLOUD_URL}${CLOUD_KEY}`);
+                if (response.status === 404) {
+                    // Bucket is completely brand new/empty, seed it with defaults
+                    db.openPool = sampleItems;
+                    await pushToCloud();
+                } else if (response.ok) {
+                    db = await response.json();
+                }
+                
+                setStatus("✅ Cloud Synced", "success");
+                document.getElementById('btn-generate').removeAttribute('disabled');
+                document.getElementById('btn-generate').innerText = "Generate 3 Choices";
+                
+                checkPromptStatus();
+                updateCounts();
+            } catch (error) {
+                console.error("Cloud Error:", error);
+                setStatus("❌ Cloud Fetch Failed (Check internet/URL)", "syncing");
             }
         }
 
+        // PUSH DATA TO THE CLOUD
+        async function pushToCloud() {
+            setStatus("📤 Saving to cloud...", "syncing");
+            try {
+                const response = await fetch(`${CLOUD_URL}${CLOUD_KEY}`, {
+                    method: 'PUT', // KVdb uses PUT to update a key
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(db)
+                });
+                if (response.ok) {
+                    setStatus("✅ Cloud Synced", "success");
+                }
+            } catch (error) {
+                console.error("Cloud Save Error:", error);
+                setStatus("❌ Cloud Save Failed", "syncing");
+            }
+        }
+
+        // --- UPDATED FUNCTION TO SHOW DELETE LIST ---
         function updateCounts() {
             document.getElementById('count-open').innerText = db.openPool.length;
             document.getElementById('count-chosen').innerText = db.chosenPool.length;
             document.getElementById('count-discarded').innerText = db.discardedPool.length;
+
+            // Refresh the delete list view
+            const listContainer = document.getElementById('delete-list-container');
+            listContainer.innerHTML = '';
+
+            if (db.openPool.length === 0) {
+                listContainer.innerHTML = '<p style="font-size: 13px; color: var(--text-light); margin: 0;">No items in the open pool.</p>';
+                return;
+            }
+
+            db.openPool.forEach(item => {
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.justifyContent = 'space-between';
+                row.style.alignItems = 'center';
+                row.style.padding = '6px 0';
+                row.style.borderBottom = '1px solid #e2e8f0';
+                row.style.fontSize = '14px';
+
+                row.innerHTML = `
+                    <span style="font-weight: 500;">${item.name}</span>
+                    <button onclick="deleteItemFromServer(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: var(--danger);">Delete</button>
+                `;
+                listContainer.appendChild(row);
+            });
         }
 
-        // Check if there's an item waiting in the chosen pool to be evaluated
+        // --- NEW ACTUAL DELETION LOGIC ---
+        async function deleteItemFromServer(itemId) {
+            const itemToDelete = db.openPool.find(i => i.id === itemId);
+            
+            if (confirm(`Are you sure you want to permanently delete "${itemToDelete.name}"?`)) {
+                // Filter out the item with the matching ID
+                db.openPool = db.openPool.filter(i => i.id !== itemId);
+                
+                // Push the new cleaned list up to KVdb
+                await pushToCloud();
+                
+                // Refresh the UI counters and list
+                updateCounts();
+            }
+        }
+
         function checkPromptStatus() {
-            if (db.chosenPool.length > 0) {
+            if (db.chosenPool && db.chosenPool.length > 0) {
                 const lastSelected = db.chosenPool[db.chosenPool.length - 1];
                 document.getElementById('prompt-item-name').innerText = lastSelected.name;
                 document.getElementById('screen-prompt').classList.remove('hidden');
@@ -323,27 +398,20 @@
             }
         }
 
-        // Handle the feedback response ("Yes" / "No")
-        function respondToPrompt(wentWell) {
-            // Pop the last item out of chosen pool
+        async function respondToPrompt(wentWell) {
             const item = db.chosenPool.pop();
-            
             if (wentWell) {
-                // Yes -> Back to original open database
                 db.openPool.push(item);
-                alert(`Awesome! "${item.name}" has been put back into rotation.`);
             } else {
-                // No -> Sent to discarded database
                 db.discardedPool.push(item);
-                alert(`Noted. "${item.name}" has been moved to the discarded pool.`);
             }
             
-            saveToLocalStorage();
+            await pushToCloud();
             updateCounts();
             document.getElementById('screen-prompt').classList.add('hidden');
         }
 
-        // --- ALGORITHM: HIERARCHICAL MATCHING ---
+        // ALGORITHM: HIERARCHICAL MATCHING
         function generateChoices() {
             const targetTags = [
                 document.getElementById('search-tag1').value,
@@ -351,60 +419,41 @@
                 document.getElementById('search-tag3').value
             ];
 
-            // 1. Group items by score (3 matches, 2 matches, 1 match, 0 matches)
             let scoringBuckets = { 3: [], 2: [], 1: [], 0: [] };
 
             db.openPool.forEach(item => {
                 let score = 0;
-                targetTags.forEach(t => {
-                    if (item.tags.includes(t)) score++;
-                });
+                targetTags.forEach(t => { if (item.tags.includes(t)) score++; });
                 scoringBuckets[score].push(item);
             });
 
-            // Helper function to shuffle an array (randomize within the group)
-            function shuffle(array) {
-                return array.sort(() => Math.random() - 0.5);
-            }
+            function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
 
-            // 2. Cascade down levels until we get 3 choices
             let selectedChoices = [];
-            
             for (let score = 3; score >= 0; score--) {
                 if (selectedChoices.length >= 3) break;
-                
                 let shuffledBucket = shuffle([...scoringBuckets[score]]);
                 while (shuffledBucket.length > 0 && selectedChoices.length < 3) {
                     selectedChoices.push(shuffledBucket.pop());
                 }
             }
-
             displayResults(selectedChoices);
         }
 
-        // --- UI RENDERERS ---
         function displayResults(choices) {
             const container = document.getElementById('results-container');
             container.innerHTML = '';
-
             if (choices.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-light)">No items in open pool database. Add some below!</p>';
+                container.innerHTML = '<p style="color: var(--text-light)">No items in database.</p>';
             }
-
             choices.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'item-card';
                 card.onclick = () => viewItemDetail(item);
-                
                 let tagsHTML = item.tags.map(t => `<span class="tag-badge">${t}</span>`).join('');
-                
-                card.innerHTML = `
-                    <strong>${item.name}</strong>
-                    <div>${tagsHTML}</div>
-                `;
+                card.innerHTML = `<strong>${item.name}</strong><div>${tagsHTML}</div>`;
                 container.appendChild(card);
             });
-
             showScreen('results');
         }
 
@@ -412,43 +461,32 @@
             currentlyViewingItem = item;
             document.getElementById('detail-title').innerText = item.name;
             document.getElementById('detail-desc').innerText = item.desc || "No description provided.";
-            
             const tagsDiv = document.getElementById('detail-tags');
             tagsDiv.innerHTML = item.tags.map(t => `<span class="tag-badge" style="background:#4a90e2; color:white;">${t}</span>`).join('');
-            
             showScreen('detail');
         }
 
-        function selectItem() {
+        async function selectItem() {
             if (!currentlyViewingItem) return;
-
-            // Remove from open pool
             db.openPool = db.openPool.filter(i => i.id !== currentlyViewingItem.id);
-            // Add to chosen pool
             db.chosenPool.push(currentlyViewingItem);
 
-            saveToLocalStorage();
+            await pushToCloud();
             updateCounts();
             
-            alert(`Selected: "${currentlyViewingItem.name}"! The tracker will check in on this item the next time you open the app.`);
-            
-            // Return to main screen configuration
             currentlyViewingItem = null;
             showScreen('generator');
             checkPromptStatus();
         }
 
-        // Helper to handle screen switching
         function showScreen(screenId) {
             document.getElementById('screen-generator').classList.add('hidden');
             document.getElementById('screen-results').classList.add('hidden');
             document.getElementById('screen-detail').classList.add('hidden');
-
             document.getElementById('screen-' + screenId).classList.remove('hidden');
         }
 
-        // Add user generation data back to database dynamically
-        function addItem() {
+        async function addItem() {
             const name = document.getElementById('add-name').value.trim();
             const desc = document.getElementById('add-desc').value.trim();
             const tags = [
@@ -457,26 +495,28 @@
                 document.getElementById('add-tag3').value
             ];
 
-            if (!name) {
-                alert("Please give the activity a name!");
-                return;
-            }
+            if (!name) { alert("Please give the activity a name!"); return; }
 
-            const newItem = {
-                id: Date.now(), // simple unique timestamp ID
-                name: name,
-                desc: desc,
-                tags: tags
-            };
-
+            const newItem = { id: Date.now(), name: name, desc: desc, tags: tags };
             db.openPool.push(newItem);
-            saveToLocalStorage();
+            
+            await pushToCloud();
             updateCounts();
 
-            // Clear inputs
             document.getElementById('add-name').value = '';
             document.getElementById('add-desc').value = '';
-            alert(`Added "${name}" successfully to your database pool.`);
+        }
+
+        async function resetAllPools() {
+            if (confirm("Are you sure you want to move ALL items from Chosen and Discarded back into the Open Pool?")) {
+                db.openPool = [...db.openPool, ...db.chosenPool, ...db.discardedPool];
+                db.chosenPool = [];
+                db.discardedPool = [];
+                
+                await pushToCloud();
+                updateCounts();
+                document.getElementById('screen-prompt').classList.add('hidden');
+            }
         }
     </script>
 </body>
