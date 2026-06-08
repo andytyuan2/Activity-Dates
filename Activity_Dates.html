@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Recommendation Engine</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --primary: #4a90e2;
+            --success: #2ec4b6;
+            --danger: #e71d36;
+            --text: #2b2d42;
+            --text-light: #6c757d;
+            --border: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        h1, h2, h3 {
+            margin-top: 0;
+            color: var(--text);
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Form elements */
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            margin-top: 15px;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            background: #fff;
+        }
+
+        /* Buttons */
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button.secondary {
+            background-color: transparent;
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        button.secondary:hover {
+            background: #f8f9fa;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* UI Blocks */
+        .prompt-box {
+            background: #eef1f6;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .prompt-box h3 { margin-bottom: 10px; }
+
+        .item-card {
+            background: #f8f9fa;
+            border: 1px solid var(--border);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .item-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            border-color: var(--primary);
+        }
+
+        .tag-badge {
+            display: inline-block;
+            background: #e2e8f0;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin-right: 5px;
+            margin-top: 5px;
+            color: var(--text-light);
+        }
+
+        /* Simple data table styling */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid var(--border);
+            padding: 8px;
+            text-align: left;
+        }
+        .data-table th { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Activity Picker</h1>
+
+        <div id="screen-prompt" class="section prompt-box hidden">
+            <h3>Follow-up Tracker</h3>
+            <p>Did your last activity goes well? <br><strong id="prompt-item-name"></strong></p>
+            <div class="btn-group">
+                <button onclick="respondToPrompt(true)" style="background: var(--success)">Yes</button>
+                <button onclick="respondToPrompt(false)" style="background: var(--danger)">No</button>
+            </div>
+        </div>
+
+        <div id="screen-generator" class="section">
+            <h2>Find Something to Do</h2>
+            
+            <label>Season</label>
+            <select id="search-tag1">
+                <option value="Summer">Summer</option>
+                <option value="Winter">Winter</option>
+                <option value="Fall">Fall</option>
+                <option value="Spring">Spring</option>
+                <option value="All-Season">All-Season</option>
+            </select>
+
+            <label>Vibe</label>
+            <select id="search-tag2">
+                <option value="Active">Active</option>
+                <option value="Creative">Creative</option>
+                <option value="Slow">Slow</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <label>Budget</label>
+            <select id="search-tag3">
+                <option value="Low-Cost">Low-Cost</option>
+                <option value="Pricey">Pricey</option>
+            </select>
+
+            <button onclick="generateChoices()" style="margin-top: 20px;">Generate 3 Choices</button>
+        </div>
+
+        <div id="screen-results" class="section hidden">
+            <h2>Your Top Matches</h2>
+            <div id="results-container"></div>
+            <button class="secondary" onclick="showScreen('generator')">Change Filters</button>
+        </div>
+
+        <div id="screen-detail" class="section hidden">
+            <h2 id="detail-title">Activity Title</h2>
+            <div style="margin-bottom: 10px;" id="detail-tags"></div>
+            <p id="detail-desc">Description goes here...</p>
+            
+            <div class="btn-group">
+                <button class="secondary" onclick="showScreen('results')">Go Back</button>
+                <button onclick="selectItem()" style="background: var(--success)">Select This</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Manage Database</h3>
+            <p style="font-size: 13px; color: var(--text-light)">Add your custom strings and tags below.</p>
+            
+            <label>Activity Name</label>
+            <input type="text" id="add-name" placeholder="e.g., Read a book at the park">
+            
+            <label>Description</label>
+            <textarea id="add-desc" rows="2" placeholder="Write a short description..."></textarea>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+                <div>
+                    <label>Season</label>
+                    <select id="add-tag1">
+                        <option value="Summer">Summer</option>
+                        <option value="Winter">Winter</option>
+                        <option value="Fall">Fall</option>
+                        <option value="Spring">Spring</option>
+                        <option value="All-Season">All-Season</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Vibe</label>
+                    <select id="add-tag2">
+                        <option value="Active">Active</option>
+                        <option value="Creative">Creative</option>
+                        <option value="Slow">Slow</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Budget</label>
+                    <select id="add-tag3">
+                        <option value="Low-Cost">Low-Cost</option>
+                        <option value="Pricey">Pricey</option>
+                    </select>
+                </div>
+            </div>
+            <button class="secondary" onclick="addItem()" style="margin-top: 15px; border-color: var(--primary); color: var(--primary)">Add to Database</button>
+
+            <h4 style="margin-top: 20px; margin-bottom: 5px;">Current Counts:</h4>
+            <div style="font-size: 13px; display: flex; gap: 15px;">
+                <span>Open Pool: <strong id="count-open">0</strong></span>
+                <span>Chosen Pool: <strong id="count-chosen">0</strong></span>
+                <span>Discarded: <strong id="count-discarded">0</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA ARCHITECTURE & SEED DATA ---
+        let db = {
+            openPool: [],
+            chosenPool: [],
+            discardedPool: []
+        };
+
+        // Default samples if local storage is fresh
+        const sampleItems = [
+            { id: 1, name: "Skiing or Snowboarding", desc: "Hit the local slopes or find a hill to sled down.", tags: ["Winter", "Active", "Pricey"] },
+            { id: 2, name: "Baking Bread", desc: "Try making a sourdough or simple no-knead loaf from scratch.", tags: ["All-Season", "Creative", "Low-Cost"] },
+            { id: 3, name: "Beach Volleyball", desc: "Head to a public court, bring a ball, and soak up the sun.", tags: ["Summer", "Active", "Low-Cost"] },
+            { id: 4, name: "Café Reading Session", desc: "Find a cozy local coffee shop, grab a hot drink, and dive into a novel.", tags: ["Fall", "Slow", "Low-Cost"] },
+            { id: 5, name: "Museum Visit", desc: "Walk through local exhibits and learn something new.", tags: ["All-Season", "Slow", "Pricey"] }
+        ];
+
+        let currentlyViewingItem = null;
+
+        // --- CORE APPLICATION LOGIC ---
+
+        // Initialize App
+        window.onload = function() {
+            loadFromLocalStorage();
+            checkPromptStatus();
+            updateCounts();
+        };
+
+        function saveToLocalStorage() {
+            localStorage.setItem('activityApp_db', JSON.stringify(db));
+        }
+
+        function loadFromLocalStorage() {
+            const stored = localStorage.getItem('activityApp_db');
+            if (stored) {
+                db = JSON.parse(stored);
+            } else {
+                db.openPool = sampleItems;
+                saveToLocalStorage();
+            }
+        }
+
+        function updateCounts() {
+            document.getElementById('count-open').innerText = db.openPool.length;
+            document.getElementById('count-chosen').innerText = db.chosenPool.length;
+            document.getElementById('count-discarded').innerText = db.discardedPool.length;
+        }
+
+        // Check if there's an item waiting in the chosen pool to be evaluated
+        function checkPromptStatus() {
+            if (db.chosenPool.length > 0) {
+                const lastSelected = db.chosenPool[db.chosenPool.length - 1];
+                document.getElementById('prompt-item-name').innerText = lastSelected.name;
+                document.getElementById('screen-prompt').classList.remove('hidden');
+            } else {
+                document.getElementById('screen-prompt').classList.add('hidden');
+            }
+        }
+
+        // Handle the feedback response ("Yes" / "No")
+        function respondToPrompt(wentWell) {
+            // Pop the last item out of chosen pool
+            const item = db.chosenPool.pop();
+            
+            if (wentWell) {
+                // Yes -> Back to original open database
+                db.openPool.push(item);
+                alert(`Awesome! "${item.name}" has been put back into rotation.`);
+            } else {
+                // No -> Sent to discarded database
+                db.discardedPool.push(item);
+                alert(`Noted. "${item.name}" has been moved to the discarded pool.`);
+            }
+            
+            saveToLocalStorage();
+            updateCounts();
+            document.getElementById('screen-prompt').classList.add('hidden');
+        }
+
+        // --- ALGORITHM: HIERARCHICAL MATCHING ---
+        function generateChoices() {
+            const targetTags = [
+                document.getElementById('search-tag1').value,
+                document.getElementById('search-tag2').value,
+                document.getElementById('search-tag3').value
+            ];
+
+            // 1. Group items by score (3 matches, 2 matches, 1 match, 0 matches)
+            let scoringBuckets = { 3: [], 2: [], 1: [], 0: [] };
+
+            db.openPool.forEach(item => {
+                let score = 0;
+                targetTags.forEach(t => {
+                    if (item.tags.includes(t)) score++;
+                });
+                scoringBuckets[score].push(item);
+            });
+
+            // Helper function to shuffle an array (randomize within the group)
+            function shuffle(array) {
+                return array.sort(() => Math.random() - 0.5);
+            }
+
+            // 2. Cascade down levels until we get 3 choices
+            let selectedChoices = [];
+            
+            for (let score = 3; score >= 0; score--) {
+                if (selectedChoices.length >= 3) break;
+                
+                let shuffledBucket = shuffle([...scoringBuckets[score]]);
+                while (shuffledBucket.length > 0 && selectedChoices.length < 3) {
+                    selectedChoices.push(shuffledBucket.pop());
+                }
+            }
+
+            displayResults(selectedChoices);
+        }
+
+        // --- UI RENDERERS ---
+        function displayResults(choices) {
+            const container = document.getElementById('results-container');
+            container.innerHTML = '';
+
+            if (choices.length === 0) {
+                container.innerHTML = '<p style="color: var(--text-light)">No items in open pool database. Add some below!</p>';
+            }
+
+            choices.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                card.onclick = () => viewItemDetail(item);
+                
+                let tagsHTML = item.tags.map(t => `<span class="tag-badge">${t}</span>`).join('');
+                
+                card.innerHTML = `
+                    <strong>${item.name}</strong>
+                    <div>${tagsHTML}</div>
+                `;
+                container.appendChild(card);
+            });
+
+            showScreen('results');
+        }
+
+        function viewItemDetail(item) {
+            currentlyViewingItem = item;
+            document.getElementById('detail-title').innerText = item.name;
+            document.getElementById('detail-desc').innerText = item.desc || "No description provided.";
+            
+            const tagsDiv = document.getElementById('detail-tags');
+            tagsDiv.innerHTML = item.tags.map(t => `<span class="tag-badge" style="background:#4a90e2; color:white;">${t}</span>`).join('');
+            
+            showScreen('detail');
+        }
+
+        function selectItem() {
+            if (!currentlyViewingItem) return;
+
+            // Remove from open pool
+            db.openPool = db.openPool.filter(i => i.id !== currentlyViewingItem.id);
+            // Add to chosen pool
+            db.chosenPool.push(currentlyViewingItem);
+
+            saveToLocalStorage();
+            updateCounts();
+            
+            alert(`Selected: "${currentlyViewingItem.name}"! The tracker will check in on this item the next time you open the app.`);
+            
+            // Return to main screen configuration
+            currentlyViewingItem = null;
+            showScreen('generator');
+            checkPromptStatus();
+        }
+
+        // Helper to handle screen switching
+        function showScreen(screenId) {
+            document.getElementById('screen-generator').classList.add('hidden');
+            document.getElementById('screen-results').classList.add('hidden');
+            document.getElementById('screen-detail').classList.add('hidden');
+
+            document.getElementById('screen-' + screenId).classList.remove('hidden');
+        }
+
+        // Add user generation data back to database dynamically
+        function addItem() {
+            const name = document.getElementById('add-name').value.trim();
+            const desc = document.getElementById('add-desc').value.trim();
+            const tags = [
+                document.getElementById('add-tag1').value,
+                document.getElementById('add-tag2').value,
+                document.getElementById('add-tag3').value
+            ];
+
+            if (!name) {
+                alert("Please give the activity a name!");
+                return;
+            }
+
+            const newItem = {
+                id: Date.now(), // simple unique timestamp ID
+                name: name,
+                desc: desc,
+                tags: tags
+            };
+
+            db.openPool.push(newItem);
+            saveToLocalStorage();
+            updateCounts();
+
+            // Clear inputs
+            document.getElementById('add-name').value = '';
+            document.getElementById('add-desc').value = '';
+            alert(`Added "${name}" successfully to your database pool.`);
+        }
+    </script>
+</body>
+</html>
