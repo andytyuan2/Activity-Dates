@@ -220,32 +220,29 @@
             <label>Description</label>
             <textarea id="add-desc" rows="2" placeholder="Write a short description..."></textarea>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
-                <div>
-                    <label>Season</label>
-                    <select id="add-tag1">
-                        <option value="Summer">Summer</option>
-                        <option value="Winter">Winter</option>
-                        <option value="Fall">Fall</option>
-                        <option value="Spring">Spring</option>
-                        <option value="All-Season">All-Season</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Vibe</label>
-                    <select id="add-tag2">
-                        <option value="Active">Active</option>
-                        <option value="Creative">Creative</option>
-                        <option value="Slow">Slow</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Budget</label>
-                    <select id="add-tag3">
-                        <option value="Low-Cost">Low-Cost</option>
-                        <option value="Pricey">Pricey</option>
-                    </select>
+            <div style="margin-top: 15px; border: 1px solid var(--border); padding: 15px; border-radius: 6px; background: #fafafa;">
+                <strong style="display: block; margin-bottom: 10px; font-size: 14px;">Select All Matching Tags:</strong>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                    <div>
+                        <label style="margin: 0 0 5px 0; font-size: 12px; color: var(--text-light);">Seasons</label>
+                        <div><input type="checkbox" name="add-tags" value="Summer" style="width:auto; margin-right:5px;"> Summer</div>
+                        <div><input type="checkbox" name="add-tags" value="Winter" style="width:auto; margin-right:5px;"> Winter</div>
+                        <div><input type="checkbox" name="add-tags" value="Fall" style="width:auto; margin-right:5px;"> Fall</div>
+                        <div><input type="checkbox" name="add-tags" value="Spring" style="width:auto; margin-right:5px;"> Spring</div>
+                        <div><input type="checkbox" name="add-tags" value="All-Season" style="width:auto; margin-right:5px;"> All-Season</div>
+                    </div>
+                    
+                    <div>
+                        <label style="margin: 0 0 5px 0; font-size: 12px; color: var(--text-light);">Vibe & Budget</label>
+                        <div><input type="checkbox" name="add-tags" value="Active" style="width:auto; margin-right:5px;"> Active</div>
+                        <div><input type="checkbox" name="add-tags" value="Creative" style="width:auto; margin-right:5px;"> Creative</div>
+                        <div><input type="checkbox" name="add-tags" value="Slow" style="width:auto; margin-right:5px;"> Slow</div>
+                        <div><input type="checkbox" name="add-tags" value="Other" style="width:auto; margin-right:5px;"> Other</div>
+                        <div style="margin-top: 5px; border-top: 1px dashed var(--border); padding-top: 5px;"></div>
+                        <div><input type="checkbox" name="add-tags" value="Low-Cost" style="width:auto; margin-right:5px;"> Low-Cost</div>
+                        <div><input type="checkbox" name="add-tags" value="Pricey" style="width:auto; margin-right:5px;"> Pricey</div>
+                    </div>
                 </div>
             </div>
             <button class="secondary" onclick="addItem()" style="margin-top: 15px; border-color: var(--primary); color: var(--primary)">Add to Database</button>
@@ -486,25 +483,48 @@
             document.getElementById('screen-' + screenId).classList.remove('hidden');
         }
 
+        // --- UPDATED ADD ITEM FUNCTION FOR MULTI-TAGS ---
         async function addItem() {
             const name = document.getElementById('add-name').value.trim();
             const desc = document.getElementById('add-desc').value.trim();
-            const tags = [
-                document.getElementById('add-tag1').value,
-                document.getElementById('add-tag2').value,
-                document.getElementById('add-tag3').value
-            ];
 
-            if (!name) { alert("Please give the activity a name!"); return; }
+            if (!name) { 
+                alert("Please give the activity a name!"); 
+                return; 
+            }
 
-            const newItem = { id: Date.now(), name: name, desc: desc, tags: tags };
+            // Gather all checked boxes
+            const checkedBoxes = document.querySelectorAll('input[name="add-tags"]:checked');
+            const tags = [];
+            checkedBoxes.forEach(cb => {
+                tags.push(cb.value);
+            });
+
+            if (tags.length === 0) {
+                alert("Please select at least one tag for this activity!");
+                return;
+            }
+
+            // Create the new item with the full list of tags
+            const newItem = { 
+                id: Date.now(), 
+                name: name, 
+                desc: desc, 
+                tags: tags 
+            };
+            
             db.openPool.push(newItem);
             
+            // Upload the updated array to KVdb cloud
             await pushToCloud();
             updateCounts();
 
+            // Clear inputs and uncheck all boxes for the next entry
             document.getElementById('add-name').value = '';
             document.getElementById('add-desc').value = '';
+            document.querySelectorAll('input[name="add-tags"]').forEach(cb => cb.checked = false);
+            
+            alert(`Added "${name}" with ${tags.length} tags!`);
         }
 
         async function resetAllPools() {
