@@ -408,32 +408,62 @@
             document.getElementById('screen-prompt').classList.add('hidden');
         }
 
-        // ALGORITHM: HIERARCHICAL MATCHING
+        // --- UPDATED ALGORITHM: SMART SEASON MATCHING ---
         function generateChoices() {
-            const targetTags = [
-                document.getElementById('search-tag1').value,
-                document.getElementById('search-tag2').value,
-                document.getElementById('search-tag3').value
-            ];
+            // Grab the 3 current filter values from the dropdowns
+            const targetSeason = document.getElementById('search-tag1').value;
+            const targetVibe = document.getElementById('search-tag2').value;
+            const targetBudget = document.getElementById('search-tag3').value;
 
+            // We still have 4 scoring tiers (3 matches down to 0)
             let scoringBuckets = { 3: [], 2: [], 1: [], 0: [] };
 
             db.openPool.forEach(item => {
                 let score = 0;
-                targetTags.forEach(t => { if (item.tags.includes(t)) score++; });
+
+                // 1. SMART SEASON MATCHING RULE
+                if (targetSeason === "All-Season") {
+                    // User wants anything: Match if the item has ANY seasonal tag at all
+                    const seasonalTags = ["Summer", "Winter", "Fall", "Spring", "All-Season"];
+                    const hasAnySeason = item.tags.some(t => seasonalTags.includes(t));
+                    if (hasAnySeason) score++;
+                } else {
+                    // User picked a specific season: Match if the item has that exact season OR is "All-Season"
+                    if (item.tags.includes(targetSeason) || item.tags.includes("All-Season")) {
+                        score++;
+                    }
+                }
+
+                // 2. VIBE MATCHING RULE (Standard exact match)
+                if (item.tags.includes(targetVibe)) {
+                    score++;
+                }
+
+                // 3. BUDGET MATCHING RULE (Standard exact match)
+                if (item.tags.includes(targetBudget)) {
+                    score++;
+                }
+
+                // Push the item into its calculated priority bucket
                 scoringBuckets[score].push(item);
             });
 
-            function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+            // Helper function to randomize within the priority groups
+            function shuffle(array) { 
+                return array.sort(() => Math.random() - 0.5); 
+            }
 
+            // Cascade down the buckets to collect exactly 3 recommendations
             let selectedChoices = [];
             for (let score = 3; score >= 0; score--) {
                 if (selectedChoices.length >= 3) break;
+                
                 let shuffledBucket = shuffle([...scoringBuckets[score]]);
                 while (shuffledBucket.length > 0 && selectedChoices.length < 3) {
                     selectedChoices.push(shuffledBucket.pop());
                 }
             }
+            
             displayResults(selectedChoices);
         }
 
