@@ -250,7 +250,7 @@
                     </div>
                 </div>
             </div>
-            <button onclick="addItem()" style="margin-top: 15px; background-color: var(--primary); color: white; border: none;">Add to Database</button>
+            <button class="add-btn" id="btn-submit-activity" onclick="addItem()" style="margin-top: 15px; background-color: var(--primary); color: white; border: none;">Add to Database</button>
             <button onclick="resetAllPools()" style="background-color: var(--danger); margin-top: 15px;">Reset All Pools back to Open Pool</button>
 
             <h4 style="margin-top: 20px; margin-bottom: 5px;">Current Counts (Cloud-Synced):</h4>
@@ -369,11 +369,12 @@
                 row.style.borderBottom = '1px solid #e2e8f0';
                 row.style.fontSize = '14px';
 
-                // Created a button group container for View and Delete side-by-side
+                // Added an Edit button to the button group
                 row.innerHTML = `
                     <span style="font-weight: 500; padding-right: 10px;">${item.name}</span>
                     <div style="display: flex; gap: 5px; flex-shrink: 0;">
                         <button onclick="viewItemDetailFromList(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: var(--primary);">View</button>
+                        <button onclick="prepareEditItem(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: #f39c12; color: white;">Edit</button>
                         <button onclick="deleteItemFromServer(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: var(--danger);">Delete</button>
                     </div>
                 `;
@@ -527,6 +528,11 @@
 
         // --- UPDATED ADD ITEM FUNCTION FOR MULTI-TAGS ---
         async function addItem() {
+            // IF WE ARE IN EDIT MODE, ROUTE TO THE SAVE FUNCTION INSTEAD
+            if (editingItemId !== null) {
+                await saveItemEdits();
+                return;
+            }
             const name = document.getElementById('add-name').value.trim();
             const desc = document.getElementById('add-desc').value.trim();
 
@@ -601,6 +607,78 @@
             if (targetItem) {
                 viewItemDetail(targetItem); // Launches the existing beautiful detail popup overlay
             }
+        }
+
+        // --- NEW EDIT MODE TRACKER VARIABLE ---
+        let editingItemId = null; 
+
+        // 1. Pull data from the item and load it into the inputs
+        function prepareEditItem(itemId) {
+            const item = db.openPool.find(i => i.id === itemId);
+            if (!item) return;
+
+            // Set tracker to this item's ID
+            editingItemId = itemId;
+
+            // Fill out text fields
+            document.getElementById('add-name').value = item.name;
+            document.getElementById('add-desc').value = item.desc;
+
+            // Uncheck all boxes first
+            document.querySelectorAll('input[name="add-tags"]').forEach(cb => cb.checked = false);
+
+            // Check boxes that match the item's tags
+            item.tags.forEach(tag => {
+                const checkbox = document.querySelector(`input[name="add-tags"][value="${tag}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+
+            // Change "Add" button into a blue "Update" button
+            const submitBtn = document.getElementById('btn-submit-activity');
+            submitBtn.innerText = "💾 Save Changes to Item";
+            submitBtn.style.backgroundColor = "#2980b9";
+            
+            // Scroll smoothly to the form so the user can see it loaded
+            document.getElementById('add-name').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 2. Handle saving changes back to the cloud
+        async function saveItemEdits() {
+            const name = document.getElementById('add-name').value.trim();
+            const desc = document.getElementById('add-desc').value.trim();
+
+            if (!name) { alert("Name cannot be empty!"); return; }
+
+            // Collect checked tags
+            const checkedBoxes = document.querySelectorAll('input[name="add-tags"]:checked');
+            const tags = [];
+            checkedBoxes.forEach(cb => tags.push(cb.value));
+
+            if (tags.length === 0) { alert("Please select at least one tag!"); return; }
+
+            // Find the item in our local array and update its data
+            db.openPool = db.openPool.map(item => {
+                if (item.id === editingItemId) {
+                    return { ...item, name: name, desc: desc, tags: tags };
+                }
+                return item;
+            });
+
+            // Sync changes to KVdb Cloud
+            await pushToCloud();
+            updateCounts();
+
+            // Reset Form UI back to default "Add Mode"
+            editingItemId = null;
+            document.getElementById('add-name').value = '';
+            document.getElementById('add-desc').value = '';
+            document.querySelectorAll('input[name="add-tags"]').forEach(cb => cb.checked = false);
+
+            const submitBtn = document.getElementById('btn-submit-activity');
+            submitBtn.innerText = "Add to Database";
+            submitBtn.style.backgroundColor = "var(--primary)";
+
+            alert("Item updated successfully across your cloud devices!");
         }
     </script>
 </body>
