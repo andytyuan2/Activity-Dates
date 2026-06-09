@@ -11,11 +11,12 @@
             --bg-color: #5f3d25;
             --card-bg: #a16a4b;
             --primary: #b1c2a8;
-            --success: #2ca734;
+            --success: #54c45c;
             --danger: #f96f5d;
             --text: #20140d;
-            --text-light: #86e098;
+            --text-light: #578f62;
             --border: #e2e8f0;
+            --text-card-bg: #dfccca;
         }
 
         body {
@@ -66,7 +67,7 @@
             border-radius: 6px; 
             box-sizing: border-box; 
             font-size: 16px; 
-            background: #f8d8d8; 
+            background: var(--text-card-bg); 
         }
 
         button { 
@@ -90,8 +91,8 @@
             cursor: not-allowed; 
         }
         button.secondary { 
-            background-color: transparent; 
-            color: var(--text-light); 
+            background-color: var(--primary); 
+            color: var(--border); 
             border: 1px solid var(--border); 
         }
         button.secondary:hover { 
@@ -114,7 +115,7 @@
         }
 
         .item-card { 
-            background: #ffeaed; 
+            background: var(--text-card-bg); 
             border: 1px solid var(--border); 
             padding: 15px; 
             border-radius: 8px; 
@@ -129,13 +130,13 @@
         }
         .tag-badge { 
             display: inline-block; 
-            background: #aef0d1; 
+            background: #ffffff; 
             padding: 2px 8px; 
             border-radius: 12px; 
             font-size: 12px; 
             margin-right: 5px; 
             margin-top: 5px; 
-            color: var(--text-light); 
+            color: var(--bg-color); 
         }
 
         #sync-status { 
@@ -220,7 +221,7 @@
             <label>Description</label>
             <textarea id="add-desc" rows="2" placeholder="Write a short description..."></textarea>
 
-            <div style="margin-top: 15px; border: 1px solid var(--border); padding: 15px; border-radius: 6px; background: #ffe3e3;">
+            <div style="margin-top: 15px; border: 1px solid var(--border); padding: 15px; border-radius: 6px; background: var(--text-card-bg);">
                 <strong style="display: block; margin-bottom: 10px; font-size: 14px;">Select All Matching Tags:</strong>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
@@ -245,7 +246,7 @@
                     </div>
                 </div>
             </div>
-            <button class="secondary" onclick="addItem()" style="margin-top: 15px; border-color: var(--primary); color: var(--primary)">Add to Database</button>
+            <button onclick="addItem()" style="margin-top: 15px; background-color: var(--primary); color: white; border: none;">Add to Database</button>
             <button onclick="resetAllPools()" style="background-color: var(--danger); margin-top: 15px;">Reset All Pools back to Open Pool</button>
 
             <h4 style="margin-top: 20px; margin-bottom: 5px;">Current Counts (Cloud-Synced):</h4>
@@ -255,7 +256,7 @@
                 <span>Discarded: <strong id="count-discarded">0</strong></span>
             </div>
             <h4 style="margin-top: 25px; margin-bottom: 10px;">Delete / Edit Items:</h4>
-            <div id="delete-list-container" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: #ffe4dd;">
+            <div id="delete-list-container" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: var(--text-card-bg);">
                 </div>
         </div>
     </div>
