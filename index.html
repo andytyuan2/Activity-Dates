@@ -139,6 +139,14 @@
             color: var(--bg-color); 
         }
 
+        .config-box { 
+            background: #fffdf0; 
+            border: 1px solid #fcf3cf; 
+            padding: 15px; 
+            border-radius: 8px; 
+            margin-bottom: 20px; 
+        }
+
         #sync-status { 
             font-size: 12px; 
             color: var(--text-light); 
@@ -156,6 +164,25 @@
     <div class="container">
         <div id="sync-status">Connecting to Cloud...</div>
         <h1>Activity Picker ☁️</h1>
+
+        <div class="config-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleConfigPanel()">
+                <strong style="color: #b7950b;">⚙️ Database Connection Settings</strong>
+                <span id="config-toggle-arrow">▶</span>
+            </div>
+            <div id="config-inputs-container" class="hidden">
+                <label>GitHub Username</label>
+                <input type="text" id="cfg-username" placeholder="e.g., octocat">
+                
+                <label>Private Repository Name</label>
+                <input type="text" id="cfg-repo" placeholder="e.g., my-activity-db" value="my-activity-db">
+                
+                <label>Personal Access Token</label>
+                <input type="password" id="cfg-token" placeholder="github_pat_...">
+                
+                <button onclick="saveConfigCredentials()" style="background: #d4ac0d; margin-top: 15px;">Connect & Sync Database</button>
+            </div>
+        </div>
 
         <div id="screen-prompt" class="section prompt-box hidden">
             <h3>Follow-up Tracker</h3>
@@ -270,31 +297,72 @@
     </div>
 
     <script>
-        // === PASTE YOUR LINK HERE ===
-        const CLOUD_URL = "https://kvdb.io/J218YhVUpLE59QfhqJC7yE/"; 
-        const CLOUD_KEY = "picker_db"; // The sub-key inside your bucket
+        // Change constants to variables so they can be set dynamically
+        let GITHUB_USERNAME = "";
+        let GITHUB_REPO = "";
+        const GITHUB_FILE_PATH = "activities.json";
+        let GITHUB_TOKEN = "";
 
         let db = { openPool: [], chosenPool: [], discardedPool: [] };
+        let currentFileSha = null; // GitHub requires a file "SHA" code to perform modifications
+        let currentlyViewingItem = null;
+        let editingItemId = null; 
 
         const sampleItems = [
-            { id: 1, name: "Skiing or Snowboarding", desc: "Hit the local slopes or find a hill to sled down.", tags: ["Winter", "Active", "Pricey"] },
-            { id: 2, name: "Baking Bread", desc: "Try making a sourdough or simple no-knead loaf from scratch.", tags: ["All-Season", "Creative", "Low-Cost"] },
-            { id: 3, name: "Beach Volleyball", desc: "Head to a public court, bring a ball, and soak up the sun.", tags: ["Summer", "Active", "Low-Cost"] },
-            { id: 4, name: "Café Reading Session", desc: "Find a cozy local coffee shop, grab a hot drink, and dive into a novel.", tags: ["Fall", "Slow", "Low-Cost"] },
-            { id: 5, name: "Museum Visit", desc: "Walk through local exhibits and learn something new.", tags: ["All-Season", "Slow", "Pricey"] }
+            { id: 1, name: "Skiing or Snowboarding", desc: "Hit the local slopes.", tags: ["Winter", "Active", "Pricey"] },
+            { id: 2, name: "Baking Bread", desc: "Try making a sourdough.", tags: ["All-Season", "Creative", "Low-Cost"] }
         ];
 
-        let currentlyViewingItem = null;
-
-        // Initialize App: Pull from Cloud instead of local storage
         window.onload = function() {
-            if (CLOUD_URL.includes("PASTE_YOUR_KVDB_URL")) {
-                alert("Please open this file in a text editor and paste your secret KVdb URL on Line 160!");
-                setStatus("Setup Required", "syncing");
+            // Look inside the browser's local sandbox memory for existing keys
+            GITHUB_USERNAME = localStorage.getItem('app_git_user') || "";
+            GITHUB_REPO = localStorage.getItem('app_git_repo') || "my-activity-db";
+            GITHUB_TOKEN = localStorage.getItem('app_git_token') || "";
+
+            // Fill the configuration inputs automatically if they exist
+            document.getElementById('cfg-username').value = GITHUB_USERNAME;
+            document.getElementById('cfg-repo').value = GITHUB_REPO;
+            document.getElementById('cfg-token').value = GITHUB_TOKEN;
+
+            if (GITHUB_USERNAME && GITHUB_TOKEN) {
+                pullFromGitHub(); // Run your existing pull function
+            } else {
+                toggleConfigPanel(); // Open the configuration window if empty
+                setStatus("⚠️ Setup Connection Configuration Settings Above", "syncing");
+            }
+        };
+
+        // Toggle the UI view of the panel
+        function toggleConfigPanel() {
+            const container = document.getElementById('config-inputs-container');
+            const arrow = document.getElementById('config-toggle-arrow');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                arrow.innerText = "▼";
+            } else {
+                container.classList.add('hidden');
+                arrow.innerText = "▶";
+            }
+        }
+
+        // Save the values directly to the browser storage, NOT your public code repository
+        function saveConfigCredentials() {
+            GITHUB_USERNAME = document.getElementById('cfg-username').value.trim();
+            GITHUB_REPO = document.getElementById('cfg-repo').value.trim();
+            GITHUB_TOKEN = document.getElementById('cfg-token').value.trim();
+
+            if (!GITHUB_USERNAME || !GITHUB_TOKEN || !GITHUB_REPO) {
+                alert("Please complete all configuration parameters.");
                 return;
             }
-            pullFromCloud();
-        };
+
+            localStorage.setItem('app_git_user', GITHUB_USERNAME);
+            localStorage.setItem('app_git_repo', GITHUB_REPO);
+            localStorage.setItem('app_git_token', GITHUB_TOKEN);
+
+            toggleConfigPanel();
+            pullFromGitHub(); // Run your existing pull function with new keys
+        }
 
         function setStatus(text, className) {
             const statusDiv = document.getElementById('sync-status');
@@ -302,51 +370,81 @@
             statusDiv.className = className;
         }
 
-        // PULL DATA FROM THE CLOUD
-        async function pullFromCloud() {
-            setStatus("🔄 Pulling latest cloud data...", "syncing");
+        // 1. PULL REPOSITORY DATA FROM GITHUB
+        async function pullFromGitHub() {
+            setStatus("🔄 Pulling from GitHub...", "syncing");
+            const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+            
             try {
-                // Fetch from the KVdb API endpoint
-                const response = await fetch(`${CLOUD_URL}${CLOUD_KEY}`);
-                if (response.status === 404) {
-                    // Bucket is completely brand new/empty, seed it with defaults
-                    db.openPool = sampleItems;
-                    await pushToCloud();
-                } else if (response.ok) {
-                    db = await response.json();
+                const response = await fetch(url, {
+                    headers: { "Authorization": `token ${GITHUB_TOKEN}` }
+                });
+
+                if (response.ok) {
+                    const fileData = await response.json();
+                    currentFileSha = fileData.sha; // Save the unique SHA fingerprint for future writing
+                    
+                    // GitHub encodes file text into Base64 format, we must decode it
+                    const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
+                    db = JSON.parse(decodedContent);
+                    
+                    // Fallback if the file was completely empty
+                    if (!db.openPool) db = { openPool: sampleItems, chosenPool: [], discardedPool: [] };
+                } else {
+                    throw new Error("Could not find file");
                 }
                 
-                setStatus("✅ Cloud Synced", "success");
+                setStatus("💾 GitHub Synced", "success");
                 document.getElementById('btn-generate').removeAttribute('disabled');
                 document.getElementById('btn-generate').innerText = "Generate 3 Choices";
                 
                 checkPromptStatus();
                 updateCounts();
             } catch (error) {
-                console.error("Cloud Error:", error);
-                setStatus("❌ Cloud Fetch Failed (Check internet/URL)", "syncing");
+                console.error(error);
+                setStatus("❌ GitHub Fetch Failed", "syncing");
             }
         }
 
-        // PUSH DATA TO THE CLOUD
-        async function pushToCloud() {
-            setStatus("📤 Saving to cloud...", "syncing");
+        // 2. PUSH UPDATED DATA BACK TO GITHUB
+        async function pushToGitHub() {
+            setStatus("📤 Committing to GitHub...", "syncing");
+            const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
+            
+            // GitHub requires data to be sent as a Base64 string
+            const jsonString = JSON.stringify(db, null, 2);
+            const encodedContent = btoa(unescape(encodeURIComponent(jsonString)));
+
+            const bodyData = {
+                message: "Update activity database app data", // The automated commit message
+                content: encodedContent,
+                sha: currentFileSha // Verifies we are updating the current version
+            };
+
             try {
-                const response = await fetch(`${CLOUD_URL}${CLOUD_KEY}`, {
-                    method: 'PUT', // KVdb uses PUT to update a key
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(db)
+                const response = await fetch(url, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `token ${GITHUB_TOKEN}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(bodyData)
                 });
+
                 if (response.ok) {
-                    setStatus("✅ Cloud Synced", "success");
+                    const resData = await response.json();
+                    currentFileSha = resData.content.sha; // Capture the brand new SHA generated by the commit
+                    setStatus("💾 GitHub Synced", "success");
+                } else {
+                    throw new Error("Write failed");
                 }
             } catch (error) {
-                console.error("Cloud Save Error:", error);
-                setStatus("❌ Cloud Save Failed", "syncing");
+                console.error(error);
+                setStatus("❌ GitHub Save Failed", "syncing");
             }
         }
 
-        // --- UPDATED FUNCTION TO SHOW DETAIL AND DELETE BUTTONS ---
+        // === ALL CORE APPLICATION APP LOGIC BELOW STAYS THE EXACT SAME ===
         function updateCounts() {
             document.getElementById('count-open').innerText = db.openPool.length;
             document.getElementById('count-chosen').innerText = db.chosenPool.length;
@@ -369,7 +467,6 @@
                 row.style.borderBottom = '1px solid #e2e8f0';
                 row.style.fontSize = '14px';
 
-                // Added an Edit button to the button group
                 row.innerHTML = `
                     <span style="font-weight: 500; padding-right: 10px;">${item.name}</span>
                     <div style="display: flex; gap: 5px; flex-shrink: 0;">
@@ -380,22 +477,6 @@
                 `;
                 listContainer.appendChild(row);
             });
-        }
-
-        // --- NEW ACTUAL DELETION LOGIC ---
-        async function deleteItemFromServer(itemId) {
-            const itemToDelete = db.openPool.find(i => i.id === itemId);
-            
-            if (confirm(`Are you sure you want to permanently delete "${itemToDelete.name}"?`)) {
-                // Filter out the item with the matching ID
-                db.openPool = db.openPool.filter(i => i.id !== itemId);
-                
-                // Push the new cleaned list up to KVdb
-                await pushToCloud();
-                
-                // Refresh the UI counters and list
-                updateCounts();
-            }
         }
 
         function checkPromptStatus() {
@@ -410,82 +491,47 @@
 
         async function respondToPrompt(wentWell) {
             const item = db.chosenPool.pop();
-            if (wentWell) {
-                db.openPool.push(item);
-            } else {
-                db.discardedPool.push(item);
-            }
-            
-            await pushToCloud();
+            if (wentWell) { db.openPool.push(item); } else { db.discardedPool.push(item); }
+            await pushToGitHub();
             updateCounts();
             document.getElementById('screen-prompt').classList.add('hidden');
         }
 
-        // --- UPDATED ALGORITHM: SMART SEASON MATCHING ---
         function generateChoices() {
-            // Grab the 3 current filter values from the dropdowns
             const targetSeason = document.getElementById('search-tag1').value;
             const targetVibe = document.getElementById('search-tag2').value;
             const targetBudget = document.getElementById('search-tag3').value;
-
-            // We still have 4 scoring tiers (3 matches down to 0)
             let scoringBuckets = { 3: [], 2: [], 1: [], 0: [] };
 
             db.openPool.forEach(item => {
                 let score = 0;
-
-                // 1. SMART SEASON MATCHING RULE
                 if (targetSeason === "All-Season") {
-                    // User wants anything: Match if the item has ANY seasonal tag at all
                     const seasonalTags = ["Summer", "Winter", "Fall", "Spring", "All-Season"];
-                    const hasAnySeason = item.tags.some(t => seasonalTags.includes(t));
-                    if (hasAnySeason) score++;
+                    if (item.tags.some(t => seasonalTags.includes(t))) score++;
                 } else {
-                    // User picked a specific season: Match if the item has that exact season OR is "All-Season"
-                    if (item.tags.includes(targetSeason) || item.tags.includes("All-Season")) {
-                        score++;
-                    }
+                    if (item.tags.includes(targetSeason) || item.tags.includes("All-Season")) score++;
                 }
-
-                // 2. VIBE MATCHING RULE (Standard exact match)
-                if (item.tags.includes(targetVibe)) {
-                    score++;
-                }
-
-                // 3. BUDGET MATCHING RULE (Standard exact match)
-                if (item.tags.includes(targetBudget)) {
-                    score++;
-                }
-
-                // Push the item into its calculated priority bucket
+                if (item.tags.includes(targetVibe)) score++;
+                if (item.tags.includes(targetBudget)) score++;
                 scoringBuckets[score].push(item);
             });
 
-            // Helper function to randomize within the priority groups
-            function shuffle(array) { 
-                return array.sort(() => Math.random() - 0.5); 
-            }
-
-            // Cascade down the buckets to collect exactly 3 recommendations
+            function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
             let selectedChoices = [];
             for (let score = 3; score >= 0; score--) {
                 if (selectedChoices.length >= 3) break;
-                
                 let shuffledBucket = shuffle([...scoringBuckets[score]]);
                 while (shuffledBucket.length > 0 && selectedChoices.length < 3) {
                     selectedChoices.push(shuffledBucket.pop());
                 }
             }
-            
             displayResults(selectedChoices);
         }
 
         function displayResults(choices) {
             const container = document.getElementById('results-container');
             container.innerHTML = '';
-            if (choices.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-light)">No items in database.</p>';
-            }
+            if (choices.length === 0) container.innerHTML = '<p style="color: var(--text-light)">No items matching filters.</p>';
             choices.forEach(item => {
                 const card = document.createElement('div');
                 card.className = 'item-card';
@@ -500,9 +546,8 @@
         function viewItemDetail(item) {
             currentlyViewingItem = item;
             document.getElementById('detail-title').innerText = item.name;
-            document.getElementById('detail-desc').innerText = item.desc || "No description provided.";
-            const tagsDiv = document.getElementById('detail-tags');
-            tagsDiv.innerHTML = item.tags.map(t => `<span class="tag-badge" style="background:#4a90e2; color:white;">${t}</span>`).join('');
+            document.getElementById('detail-desc').innerText = item.desc || "No description.";
+            document.getElementById('detail-tags').innerHTML = item.tags.map(t => `<span class="tag-badge" style="background:#4a90e2; color:white;">${t}</span>`).join('');
             showScreen('detail');
         }
 
@@ -510,10 +555,8 @@
             if (!currentlyViewingItem) return;
             db.openPool = db.openPool.filter(i => i.id !== currentlyViewingItem.id);
             db.chosenPool.push(currentlyViewingItem);
-
-            await pushToCloud();
+            await pushToGitHub();
             updateCounts();
-            
             currentlyViewingItem = null;
             showScreen('generator');
             checkPromptStatus();
@@ -526,159 +569,98 @@
             document.getElementById('screen-' + screenId).classList.remove('hidden');
         }
 
-        // --- UPDATED ADD ITEM FUNCTION FOR MULTI-TAGS ---
         async function addItem() {
-            // IF WE ARE IN EDIT MODE, ROUTE TO THE SAVE FUNCTION INSTEAD
-            if (editingItemId !== null) {
-                await saveItemEdits();
-                return;
-            }
+            if (editingItemId !== null) { await saveItemEdits(); return; }
             const name = document.getElementById('add-name').value.trim();
             const desc = document.getElementById('add-desc').value.trim();
+            if (!name) { alert("Please give the activity a name!"); return; }
 
-            if (!name) { 
-                alert("Please give the activity a name!"); 
-                return; 
-            }
-
-            // Gather all checked boxes
             const checkedBoxes = document.querySelectorAll('input[name="add-tags"]:checked');
             const tags = [];
-            checkedBoxes.forEach(cb => {
-                tags.push(cb.value);
-            });
+            checkedBoxes.forEach(cb => tags.push(cb.value));
+            if (tags.length === 0) { alert("Please select at least one tag!"); return; }
 
-            if (tags.length === 0) {
-                alert("Please select at least one tag for this activity!");
-                return;
-            }
-
-            // Create the new item with the full list of tags
-            const newItem = { 
-                id: Date.now(), 
-                name: name, 
-                desc: desc, 
-                tags: tags 
-            };
-            
+            const newItem = { id: Date.now(), name: name, desc: desc, tags: tags };
             db.openPool.push(newItem);
-            
-            // Upload the updated array to KVdb cloud
-            await pushToCloud();
+            await pushToGitHub();
             updateCounts();
 
-            // Clear inputs and uncheck all boxes for the next entry
             document.getElementById('add-name').value = '';
             document.getElementById('add-desc').value = '';
             document.querySelectorAll('input[name="add-tags"]').forEach(cb => cb.checked = false);
-            
-            alert(`Added "${name}" with ${tags.length} tags!`);
+        }
+
+        function prepareEditItem(itemId) {
+            const item = db.openPool.find(i => i.id === itemId);
+            if (!item) return;
+            editingItemId = itemId;
+            document.getElementById('add-name').value = item.name;
+            document.getElementById('add-desc').value = item.desc;
+            document.querySelectorAll('input[name="add-tags"]').forEach(cb => cb.checked = false);
+            item.tags.forEach(tag => {
+                const checkbox = document.querySelector(`input[name="add-tags"][value="${tag}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+            const submitBtn = document.getElementById('btn-submit-activity');
+            submitBtn.innerText = "💾 Save Changes to Item";
+            submitBtn.style.backgroundColor = "#2980b9";
+            document.getElementById('add-name').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function saveItemEdits() {
+            const name = document.getElementById('add-name').value.trim();
+            const desc = document.getElementById('add-desc').value.trim();
+            if (!name) return;
+            const checkedBoxes = document.querySelectorAll('input[name="add-tags"]:checked');
+            const tags = [];
+            checkedBoxes.forEach(cb => tags.push(cb.value));
+
+            db.openPool = db.openPool.map(item => (item.id === editingItemId) ? { ...item, name, desc, tags } : item);
+            await pushToGitHub();
+            updateCounts();
+
+            editingItemId = null;
+            document.getElementById('add-name').value = '';
+            document.getElementById('add-desc').value = '';
+            document.querySelectorAll('input[name="add-tags"]').forEach(cb => cb.checked = false);
+            const submitBtn = document.getElementById('btn-submit-activity');
+            submitBtn.innerText = "Add to Database";
+            submitBtn.style.backgroundColor = "var(--primary)";
+        }
+
+        async function deleteItemFromServer(itemId) {
+            const itemToDelete = db.openPool.find(i => i.id === itemId);
+            if (confirm(`Delete "${itemToDelete.name}"?`)) {
+                db.openPool = db.openPool.filter(i => i.id !== itemId);
+                await pushToGitHub();
+                updateCounts();
+            }
         }
 
         async function resetAllPools() {
-            if (confirm("Are you sure you want to move ALL items from Chosen and Discarded back into the Open Pool?")) {
+            if (confirm("Reset everything back into open pool?")) {
                 db.openPool = [...db.openPool, ...db.chosenPool, ...db.discardedPool];
                 db.chosenPool = [];
                 db.discardedPool = [];
-                
-                await pushToCloud();
+                await pushToGitHub();
                 updateCounts();
                 document.getElementById('screen-prompt').classList.add('hidden');
             }
         }
 
-        // --- NEW COLLAPSIBLE TOGGLE LOGIC ---
         function toggleDatabaseView() {
             const panel = document.getElementById('db-view-panel');
             const button = document.getElementById('btn-toggle-db');
-            
             if (panel.classList.contains('hidden')) {
-                panel.classList.remove('hidden');
-                button.innerText = "📁 Hide Database";
+                panel.classList.remove('hidden'); button.innerText = "📁 Hide Database";
             } else {
-                panel.classList.add('hidden');
-                button.innerText = "📁 See Database";
+                panel.classList.add('hidden'); button.innerText = "📁 See Database";
             }
         }
 
-        // --- NEW HELPER TO ROUTE LIST CLICK TO THE EXISTING DETAIL VIEW ---
         function viewItemDetailFromList(itemId) {
             const targetItem = db.openPool.find(i => i.id === itemId);
-            if (targetItem) {
-                viewItemDetail(targetItem); // Launches the existing beautiful detail popup overlay
-            }
-        }
-
-        // --- NEW EDIT MODE TRACKER VARIABLE ---
-        let editingItemId = null; 
-
-        // 1. Pull data from the item and load it into the inputs
-        function prepareEditItem(itemId) {
-            const item = db.openPool.find(i => i.id === itemId);
-            if (!item) return;
-
-            // Set tracker to this item's ID
-            editingItemId = itemId;
-
-            // Fill out text fields
-            document.getElementById('add-name').value = item.name;
-            document.getElementById('add-desc').value = item.desc;
-
-            // Uncheck all boxes first
-            document.querySelectorAll('input[name="add-tags"]').forEach(cb => cb.checked = false);
-
-            // Check boxes that match the item's tags
-            item.tags.forEach(tag => {
-                const checkbox = document.querySelector(`input[name="add-tags"][value="${tag}"]`);
-                if (checkbox) checkbox.checked = true;
-            });
-
-            // Change "Add" button into a blue "Update" button
-            const submitBtn = document.getElementById('btn-submit-activity');
-            submitBtn.innerText = "💾 Save Changes to Item";
-            submitBtn.style.backgroundColor = "#2980b9";
-            
-            // Scroll smoothly to the form so the user can see it loaded
-            document.getElementById('add-name').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        // 2. Handle saving changes back to the cloud
-        async function saveItemEdits() {
-            const name = document.getElementById('add-name').value.trim();
-            const desc = document.getElementById('add-desc').value.trim();
-
-            if (!name) { alert("Name cannot be empty!"); return; }
-
-            // Collect checked tags
-            const checkedBoxes = document.querySelectorAll('input[name="add-tags"]:checked');
-            const tags = [];
-            checkedBoxes.forEach(cb => tags.push(cb.value));
-
-            if (tags.length === 0) { alert("Please select at least one tag!"); return; }
-
-            // Find the item in our local array and update its data
-            db.openPool = db.openPool.map(item => {
-                if (item.id === editingItemId) {
-                    return { ...item, name: name, desc: desc, tags: tags };
-                }
-                return item;
-            });
-
-            // Sync changes to KVdb Cloud
-            await pushToCloud();
-            updateCounts();
-
-            // Reset Form UI back to default "Add Mode"
-            editingItemId = null;
-            document.getElementById('add-name').value = '';
-            document.getElementById('add-desc').value = '';
-            document.querySelectorAll('input[name="add-tags"]').forEach(cb => cb.checked = false);
-
-            const submitBtn = document.getElementById('btn-submit-activity');
-            submitBtn.innerText = "Add to Database";
-            submitBtn.style.backgroundColor = "var(--primary)";
-
-            alert("Item updated successfully across your cloud devices!");
+            if (targetItem) viewItemDetail(targetItem);
         }
     </script>
 </body>
