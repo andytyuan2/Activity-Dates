@@ -140,7 +140,7 @@
         }
 
         .config-box { 
-            background: #fffdf0; 
+            background: var(--card-bg); 
             border: 1px solid #fcf3cf; 
             padding: 15px; 
             border-radius: 8px; 
@@ -164,25 +164,6 @@
     <div class="container">
         <div id="sync-status">Connecting to Cloud...</div>
         <h1>Activity Picker ☁️</h1>
-
-        <div class="config-box">
-            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleConfigPanel()">
-                <strong style="color: #b7950b;">⚙️ Database Connection Settings</strong>
-                <span id="config-toggle-arrow">▶</span>
-            </div>
-            <div id="config-inputs-container" class="hidden">
-                <label>GitHub Username</label>
-                <input type="text" id="cfg-username" placeholder="e.g., octocat">
-                
-                <label>Private Repository Name</label>
-                <input type="text" id="cfg-repo" placeholder="e.g., my-activity-db" value="my-activity-db">
-                
-                <label>Personal Access Token</label>
-                <input type="password" id="cfg-token" placeholder="github_pat_...">
-                
-                <button onclick="saveConfigCredentials()" style="background: #d4ac0d; margin-top: 15px;">Connect & Sync Database</button>
-            </div>
-        </div>
 
         <div id="screen-prompt" class="section prompt-box hidden">
             <h3>Follow-up Tracker</h3>
@@ -294,6 +275,25 @@
                 <div id="delete-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: #f8f9fa;">
                     </div>
             </div>
+
+        <div class="config-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleConfigPanel()">
+                <strong style="background: var(--card-bg); color: #242116;">⚙️ Database Connection Settings</strong>
+                <span id="config-toggle-arrow">▶</span>
+            </div>
+            <div id="config-inputs-container" class="hidden">
+                <label>GitHub Username</label>
+                <input type="text" id="cfg-username" placeholder="e.g., octocat">
+                
+                <label>Private Repository Name</label>
+                <input type="text" id="cfg-repo" placeholder="e.g., my-activity-db" value="my-activity-db">
+                
+                <label>Personal Access Token</label>
+                <input type="password" id="cfg-token" placeholder="github_pat_...">
+                
+                <button onclick="saveConfigCredentials()" style="background: var(--bg-color); margin-top: 15px;">Connect & Sync Database</button>
+            </div>
+        </div>
     </div>
 
     <script>
