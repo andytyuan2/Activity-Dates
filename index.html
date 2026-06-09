@@ -22,7 +22,7 @@
         body {
             font-family: "Bitcount Single", system-ui;
             font-optical-sizing: auto;
-            font-weight: 250;
+            font-weight: 300;
             font-style: normal;
             background-color: var(--bg-color);
             color: var(--text);
@@ -202,9 +202,13 @@
         </div>
 
         <div id="screen-detail" class="section hidden">
-            <h2 id="detail-title">Activity Title</h2>
-            <div style="margin-bottom: 10px;" id="detail-tags"></div>
-            <p id="detail-desc">Description goes here...</p>
+            <h2>Activity Details</h2>
+            
+            <div style="background: var(--text-card-bg); border: 1px solid var(--border); border-left: 5px solid var(--primary); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                <h3 id="detail-title" style="margin-bottom: 10px; color: var(--text);">Activity Title</h3>
+                <div style="margin-bottom: 15px;" id="detail-tags"></div>
+                <p id="detail-desc" style="line-height: 1.5; color: var(--text); font-size: 16px; margin: 0;">Description goes here...</p>
+            </div>
             
             <div class="btn-group">
                 <button class="secondary" onclick="showScreen('results')">Go Back</button>
@@ -255,10 +259,14 @@
                 <span>Chosen Pool: <strong id="count-chosen">0</strong></span>
                 <span>Discarded: <strong id="count-discarded">0</strong></span>
             </div>
-            <h4 style="margin-top: 25px; margin-bottom: 10px;">Delete / Edit Items:</h4>
-            <div id="delete-list-container" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: var(--text-card-bg);">
-                </div>
-        </div>
+            <h4 style="margin-top: 25px; margin-bottom: 10px;">Database View:</h4>
+
+            <button class="secondary" id="btn-toggle-db" onclick="toggleDatabaseView()" style="border-color: var(--primary); color: white; margin-bottom: 10px;">📁 See Database</button>
+
+            <div id="db-view-panel" class="hidden">
+                <div id="delete-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: #f8f9fa;">
+                    </div>
+            </div>
     </div>
 
     <script>
@@ -338,13 +346,12 @@
             }
         }
 
-        // --- UPDATED FUNCTION TO SHOW DELETE LIST ---
+        // --- UPDATED FUNCTION TO SHOW DETAIL AND DELETE BUTTONS ---
         function updateCounts() {
             document.getElementById('count-open').innerText = db.openPool.length;
             document.getElementById('count-chosen').innerText = db.chosenPool.length;
             document.getElementById('count-discarded').innerText = db.discardedPool.length;
 
-            // Refresh the delete list view
             const listContainer = document.getElementById('delete-list-container');
             listContainer.innerHTML = '';
 
@@ -358,13 +365,17 @@
                 row.style.display = 'flex';
                 row.style.justifyContent = 'space-between';
                 row.style.alignItems = 'center';
-                row.style.padding = '6px 0';
+                row.style.padding = '8px 0';
                 row.style.borderBottom = '1px solid #e2e8f0';
                 row.style.fontSize = '14px';
 
+                // Created a button group container for View and Delete side-by-side
                 row.innerHTML = `
-                    <span style="font-weight: 500;">${item.name}</span>
-                    <button onclick="deleteItemFromServer(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: var(--danger);">Delete</button>
+                    <span style="font-weight: 500; padding-right: 10px;">${item.name}</span>
+                    <div style="display: flex; gap: 5px; flex-shrink: 0;">
+                        <button onclick="viewItemDetailFromList(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: var(--primary);">View</button>
+                        <button onclick="deleteItemFromServer(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: var(--danger);">Delete</button>
+                    </div>
                 `;
                 listContainer.appendChild(row);
             });
@@ -567,6 +578,28 @@
                 await pushToCloud();
                 updateCounts();
                 document.getElementById('screen-prompt').classList.add('hidden');
+            }
+        }
+
+        // --- NEW COLLAPSIBLE TOGGLE LOGIC ---
+        function toggleDatabaseView() {
+            const panel = document.getElementById('db-view-panel');
+            const button = document.getElementById('btn-toggle-db');
+            
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                button.innerText = "📁 Hide Database";
+            } else {
+                panel.classList.add('hidden');
+                button.innerText = "📁 See Database";
+            }
+        }
+
+        // --- NEW HELPER TO ROUTE LIST CLICK TO THE EXISTING DETAIL VIEW ---
+        function viewItemDetailFromList(itemId) {
+            const targetItem = db.openPool.find(i => i.id === itemId);
+            if (targetItem) {
+                viewItemDetail(targetItem); // Launches the existing beautiful detail popup overlay
             }
         }
     </script>
