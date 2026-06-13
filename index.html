@@ -272,49 +272,8 @@
             <button class="secondary" id="btn-toggle-db" onclick="toggleDatabaseView()" style="border-color: var(--primary); color: white; margin-bottom: 10px;">📁 See Database</button>
 
             <div id="db-view-panel" class="hidden">
-                <!-- COLLAPSIBLE DATABASE LIST WITH ADVANCED FILTERS -->
-                <h4 style="margin-top: 25px; margin-bottom: 10px;">Database View:</h4>
-                <button class="secondary" id="btn-toggle-db" onclick="toggleDatabaseView()" style="border-color: var(--primary); color: var(--primary); margin-bottom: 10px;">📁 See Database</button>
-
-                <div id="db-view-panel" class="hidden" style="border: 1px solid var(--border); padding: 15px; border-radius: 8px; background: #f8f9fa;">
-                    
-                    <!-- Inline Filter Row -->
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
-                        <div>
-                            <label style="font-size: 12px; font-weight: bold; color: var(--text-light);">Season</label>
-                            <select id="db-filter-season" onchange="renderDatabaseList()" style="width: 100%; padding: 5px; font-size: 13px;">
-                                <option value="All">🔍 All Seasons</option>
-                                <option value="All-Season">All-Season</option>
-                                <option value="Spring">Spring</option>
-                                <option value="Summer">Summer</option>
-                                <option value="Fall">Fall</option>
-                                <option value="Winter">Winter</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size: 12px; font-weight: bold; color: var(--text-light);">Vibe</label>
-                            <select id="db-filter-vibe" onchange="renderDatabaseList()" style="width: 100%; padding: 5px; font-size: 13px;">
-                                <option value="All">🔍 All Vibes</option>
-                                <option value="Chill">Chill</option>
-                                <option value="Active">Active</option>
-                                <option value="Cozy">Cozy</option>
-                                <option value="Adventurous">Adventurous</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size: 12px; font-weight: bold; color: var(--text-light);">Budget</label>
-                            <select id="db-filter-budget" onchange="renderDatabaseList()" style="width: 100%; padding: 5px; font-size: 13px;">
-                                <option value="All">🔍 All Budgets</option>
-                                <option value="Free">Free</option>
-                                <option value="Cheap">Cheap</option>
-                                <option value="Pricey">Pricey</option>
-                            </select>
-                        </div>
+                <div id="delete-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: #f8f9fa;">
                     </div>
-
-                    <!-- Container where filtered results populate -->
-                    <div id="delete-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px; background: #ffffff;"></div>
-                </div>
             </div>
 
         <div class="config-box">
