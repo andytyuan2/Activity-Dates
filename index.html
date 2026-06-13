@@ -497,34 +497,80 @@
             document.getElementById('screen-prompt').classList.add('hidden');
         }
 
+        // --- UPDATED ALGORITHM: WEIGHTED HIERARCHY SEASON MATCHING ---
         function generateChoices() {
+            // Grab the 3 current filter values from the dropdowns
             const targetSeason = document.getElementById('search-tag1').value;
             const targetVibe = document.getElementById('search-tag2').value;
             const targetBudget = document.getElementById('search-tag3').value;
-            let scoringBuckets = { 3: [], 2: [], 1: [], 0: [] };
+
+            // Use a map to collect items by their decimal scores dynamically
+            let scoringBuckets = {};
 
             db.openPool.forEach(item => {
                 let score = 0;
+
+                // 1. SEASON HIERARCHY RULE (Weighted Points)
                 if (targetSeason === "All-Season") {
-                    const seasonalTags = ["Summer", "Winter", "Fall", "Spring", "All-Season"];
-                    if (item.tags.some(t => seasonalTags.includes(t))) score++;
+                    // User selected "All-Season" dropdown
+                    if (item.tags.includes("All-Season")) {
+                        score += 1.0; // Perfect match: user wants all-season, item IS all-season
+                    } else {
+                        const specificSeasons = ["Summer", "Winter", "Fall", "Spring"];
+                        const hasSpecificSeason = item.tags.some(t => specificSeasons.includes(t));
+                        if (hasSpecificSeason) {
+                            score += 0.5; // Lower priority: item has a specific season instead
+                        }
+                    }
                 } else {
-                    if (item.tags.includes(targetSeason) || item.tags.includes("All-Season")) score++;
+                    // User selected a specific season dropdown (e.g., "Winter")
+                    if (item.tags.includes(targetSeason)) {
+                        score += 1.0; // Top priority: Exact seasonal match!
+                    } else if (item.tags.includes("All-Season")) {
+                        score += 0.5; // Lower priority: It works because it's All-Season, but it's not specific
+                    }
                 }
-                if (item.tags.includes(targetVibe)) score++;
-                if (item.tags.includes(targetBudget)) score++;
+
+                // 2. VIBE MATCHING RULE (Standard exact match)
+                if (item.tags.includes(targetVibe)) {
+                    score += 1.0;
+                }
+
+                // 3. BUDGET MATCHING RULE (Standard exact match)
+                if (item.tags.includes(targetBudget)) {
+                    score += 1.0;
+                }
+
+                // Safely initialize the decimal bucket array if it doesn't exist yet
+                if (!scoringBuckets[score]) {
+                    scoringBuckets[score] = [];
+                }
                 scoringBuckets[score].push(item);
             });
 
-            function shuffle(array) { return array.sort(() => Math.random() - 0.5); }
+            // Helper function to randomize items within identical scoring tiers
+            function shuffle(array) { 
+                return array.sort(() => Math.random() - 0.5); 
+            }
+
+            // Sort all existing numeric score keys from highest (3.0) down to lowest (0.0)
+            let sortedScores = Object.keys(scoringBuckets)
+                                    .map(Number)
+                                    .sort((a, b) => b - a);
+
+            // Cascade down the sorted tiers to collect exactly 3 recommendations
             let selectedChoices = [];
-            for (let score = 3; score >= 0; score--) {
+            for (let i = 0; i < sortedScores.length; i++) {
                 if (selectedChoices.length >= 3) break;
-                let shuffledBucket = shuffle([...scoringBuckets[score]]);
+                
+                let currentTierScore = sortedScores[i];
+                let shuffledBucket = shuffle([...scoringBuckets[currentTierScore]]);
+                
                 while (shuffledBucket.length > 0 && selectedChoices.length < 3) {
                     selectedChoices.push(shuffledBucket.pop());
                 }
             }
+            
             displayResults(selectedChoices);
         }
 
