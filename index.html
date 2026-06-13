@@ -147,6 +147,25 @@
             margin-bottom: 20px; 
         }
 
+        /* Filter Pills Styling */
+        .filter-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 2px;
+            font-size: 12px;
+            background-color: #e2e8f0;
+            color: #4a5568;
+            border-radius: 16px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s ease;
+            border: 1px solid transparent;
+        }
+        .filter-pill.active {
+            background-color: var(--bg-color);
+            color: white;
+        }
+
         #sync-status { 
             font-size: 12px; 
             color: var(--text-light); 
@@ -272,8 +291,13 @@
             <button class="secondary" id="btn-toggle-db" onclick="toggleDatabaseView()" style="border-color: var(--primary); color: white; margin-bottom: 10px;">📁 See Database</button>
 
             <div id="db-view-panel" class="hidden">
+                <div style="margin-bottom: 12px; background: #f1f5f9; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                    <div style="font-size: 12px; font-weight: 600; color: #4a5568; margin-bottom: 6px;">Filter:</div>
+                    <div id="filter-pills-container">
+                        </div>
+                </div>
                 <div id="delete-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: #f8f9fa;">
-                    </div>
+                </div>
             </div>
 
         <div class="config-box">
@@ -307,6 +331,12 @@
         let currentFileSha = null; // GitHub requires a file "SHA" code to perform modifications
         let currentlyViewingItem = null;
         let editingItemId = null; 
+        // Tracking state for Union database display filtering
+        let activeDatabaseFilters = [];
+        const ALL_POSSIBLE_TAGS = [
+            "Summer", "Winter", "Fall", "Spring", "All-Season",
+            "Active", "Creative", "Slow", "Other", "Low-Cost", "Pricey"
+        ];
 
         const sampleItems = [
             { id: 1, name: "Skiing or Snowboarding", desc: "Hit the local slopes.", tags: ["Winter", "Active", "Pricey"] },
@@ -323,6 +353,9 @@
             document.getElementById('cfg-username').value = GITHUB_USERNAME;
             document.getElementById('cfg-repo').value = GITHUB_REPO;
             document.getElementById('cfg-token').value = GITHUB_TOKEN;
+
+            // INSERT THIS LINE: Generate filter buttons inside the DB view panel
+            buildFilterPillsUI();
 
             if (GITHUB_USERNAME && GITHUB_TOKEN) {
                 pullFromGitHub(); // Run your existing pull function
@@ -384,8 +417,14 @@
                     const fileData = await response.json();
                     currentFileSha = fileData.sha; // Save the unique SHA fingerprint for future writing
                     
-                    // GitHub encodes file text into Base64 format, we must decode it
-                    const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
+                    // Safely handles all UTF-8 characters and Emojis
+                    const binaryString = atob(fileData.content.replace(/\s/g, ''));
+                    const len = binaryString.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binaryString.charCodeAt(i);
+                    }
+                    const decodedContent = new TextDecoder('utf-8').decode(bytes);
                     db = JSON.parse(decodedContent);
                     
                     // Fallback if the file was completely empty
@@ -411,9 +450,13 @@
             setStatus("📤 Committing to GitHub...", "syncing");
             const url = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${GITHUB_FILE_PATH}`;
             
-            // GitHub requires data to be sent as a Base64 string
             const jsonString = JSON.stringify(db, null, 2);
-            const encodedContent = btoa(unescape(encodeURIComponent(jsonString)));
+            const bytes = new TextEncoder().encode(jsonString);
+            let binaryString = "";
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binaryString += String.fromCharCode(bytes[i]);
+            }
+            const encodedContent = btoa(binaryString);
 
             const bodyData = {
                 message: "Update activity database app data", // The automated commit message
@@ -454,11 +497,24 @@
             listContainer.innerHTML = '';
 
             if (db.openPool.length === 0) {
-                listContainer.innerHTML = '<p style="font-size: 13px; color: var(--text-light); margin: 0;">No items in the open pool.</p>';
+                listContainer.innerHTML = '<p style="font-size: 13px; color: var(--text-light); margin: 0;">No items.</p>';
                 return;
             }
 
-            db.openPool.forEach(item => {
+            // Intersection Filter Engine: Match item only if it contains ALL selected filter tags
+            let itemsToDisplay = db.openPool;
+            if (activeDatabaseFilters.length > 0) {
+                itemsToDisplay = db.openPool.filter(item => 
+                    activeDatabaseFilters.every(t => item.tags.includes(t)) // Changed .some() to .every()
+                );
+            }
+
+            if (itemsToDisplay.length === 0) {
+                listContainer.innerHTML = '<p style="font-size: 13px; color: var(--text-light); margin: 0; padding: 5px;">No items match selected filter.</p>';
+                return;
+            }
+
+            itemsToDisplay.forEach(item => {
                 const row = document.createElement('div');
                 row.style.display = 'flex';
                 row.style.justifyContent = 'space-between';
@@ -708,6 +764,36 @@
             const targetItem = db.openPool.find(i => i.id === itemId);
             if (targetItem) viewItemDetail(targetItem);
         }
+
+        // Build interactive UI filter pills
+        function buildFilterPillsUI() {
+            const container = document.getElementById('filter-pills-container');
+            container.innerHTML = '';
+            ALL_POSSIBLE_TAGS.forEach(tag => {
+                const pill = document.createElement('span');
+                pill.className = 'filter-pill';
+                pill.innerText = tag;
+                pill.setAttribute('data-tag', tag);
+                pill.onclick = () => toggleFilterTag(tag);
+                container.appendChild(pill);
+            });
+        }
+
+        // Toggle tags in state and trigger list view repaint
+        function toggleFilterTag(tag) {
+            const index = activeDatabaseFilters.indexOf(tag);
+            const pill = document.querySelector(`.filter-pill[data-tag="${tag}"]`);
+            
+            if (index > -1) {
+                activeDatabaseFilters.splice(index, 1);
+                if(pill) pill.classList.remove('active');
+            } else {
+                activeDatabaseFilters.push(tag);
+                if(pill) pill.classList.add('active');
+            }
+            updateCounts(); // Re-render lists using active filters
+        }
+
     </script>
 </body>
 </html>
