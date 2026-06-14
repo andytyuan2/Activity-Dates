@@ -244,7 +244,7 @@
         </div>
 
         <div class="section">
-            <button class="secondary" id="btn-toggle-manage" onclick="toggleManagePanel()" style="border-color: var(--primary); margin-bottom: 10px;">🛠️ Manage Database Settings</button>
+            <button class="secondary" id="btn-toggle-manage" onclick="toggleManagePanel()" style="border-color: var(--primary); margin-bottom: 10px;">🛠️ Add to or Reset Database</button>
             
             <div id="manage-panel" class="hidden" style="margin-top: 15px;">
                 <label>Activity Name</label>
@@ -698,7 +698,7 @@
             if (!item) return;
             editingItemId = itemId;
             document.getElementById('manage-panel').classList.remove('hidden');
-            document.getElementById('btn-toggle-manage').innerText = "🛠️ Hide Database Settings";
+            document.getElementById('btn-toggle-manage').innerText = "🛠️ Hide Database Management";
 
             document.getElementById('add-name').value = item.name;
             document.getElementById('add-desc').value = item.desc;
@@ -806,10 +806,10 @@
             const button = document.getElementById('btn-toggle-manage');
             if (panel.classList.contains('hidden')) {
                 panel.classList.remove('hidden'); 
-                button.innerText = "🛠️ Hide Database Settings";
+                button.innerText = "🛠️ Hide Database Management";
             } else {
                 panel.classList.add('hidden'); 
-                button.innerText = "🛠️ Manage Database Settings";
+                button.innerText = "🛠️ Add to or Reset Database";
             }
         }
 
