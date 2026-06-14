@@ -244,41 +244,43 @@
         </div>
 
         <div class="section">
-            <h3>Manage Database</h3>
+            <button class="secondary" id="btn-toggle-manage" onclick="toggleManagePanel()" style="border-color: var(--primary); margin-bottom: 10px;">🛠️ Manage Database Settings</button>
             
-            <label>Activity Name</label>
-            <input type="text" id="add-name" placeholder="e.g., Read a book at the park">
-            
-            <label>Description</label>
-            <textarea id="add-desc" rows="2" placeholder="Write a short description..."></textarea>
-
-            <div style="margin-top: 15px; border: 1px solid var(--border); padding: 15px; border-radius: 6px; background: var(--text-card-bg);">
-                <strong style="display: block; margin-bottom: 10px; font-size: 14px;">Select All Matching Tags:</strong>
+            <div id="manage-panel" class="hidden" style="margin-top: 15px;">
+                <label>Activity Name</label>
+                <input type="text" id="add-name" placeholder="e.g., Read a book at the park">
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
-                    <div>
-                        <label style="margin: 0 0 5px 0; font-size: 12px; color: var(--text-light);">Seasons</label>
-                        <div><input type="checkbox" name="add-tags" value="Summer" style="width:auto; margin-right:5px;"> Summer</div>
-                        <div><input type="checkbox" name="add-tags" value="Winter" style="width:auto; margin-right:5px;"> Winter</div>
-                        <div><input type="checkbox" name="add-tags" value="Fall" style="width:auto; margin-right:5px;"> Fall</div>
-                        <div><input type="checkbox" name="add-tags" value="Spring" style="width:auto; margin-right:5px;"> Spring</div>
-                        <div><input type="checkbox" name="add-tags" value="All-Season" style="width:auto; margin-right:5px;"> All-Season</div>
-                    </div>
+                <label>Description</label>
+                <textarea id="add-desc" rows="2" placeholder="Write a short description..."></textarea>
+
+                <div style="margin-top: 15px; border: 1px solid var(--border); padding: 15px; border-radius: 6px; background: var(--text-card-bg);">
+                    <strong style="display: block; margin-bottom: 10px; font-size: 14px;">Select All Matching Tags:</strong>
                     
-                    <div>
-                        <label style="margin: 0 0 5px 0; font-size: 12px; color: var(--text-light);">Vibe & Budget</label>
-                        <div><input type="checkbox" name="add-tags" value="Active" style="width:auto; margin-right:5px;"> Active</div>
-                        <div><input type="checkbox" name="add-tags" value="Creative" style="width:auto; margin-right:5px;"> Creative</div>
-                        <div><input type="checkbox" name="add-tags" value="Slow" style="width:auto; margin-right:5px;"> Slow</div>
-                        <div><input type="checkbox" name="add-tags" value="Other" style="width:auto; margin-right:5px;"> Other</div>
-                        <div style="margin-top: 5px; border-top: 1px dashed var(--border); padding-top: 5px;"></div>
-                        <div><input type="checkbox" name="add-tags" value="Low-Cost" style="width:auto; margin-right:5px;"> Low-Cost</div>
-                        <div><input type="checkbox" name="add-tags" value="Pricey" style="width:auto; margin-right:5px;"> Pricey</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+                        <div>
+                            <label style="margin: 0 0 5px 0; font-size: 12px; color: var(--text-light);">Seasons</label>
+                            <div><input type="checkbox" name="add-tags" value="Summer" style="width:auto; margin-right:5px;"> Summer</div>
+                            <div><input type="checkbox" name="add-tags" value="Winter" style="width:auto; margin-right:5px;"> Winter</div>
+                            <div><input type="checkbox" name="add-tags" value="Fall" style="width:auto; margin-right:5px;"> Fall</div>
+                            <div><input type="checkbox" name="add-tags" value="Spring" style="width:auto; margin-right:5px;"> Spring</div>
+                            <div><input type="checkbox" name="add-tags" value="All-Season" style="width:auto; margin-right:5px;"> All-Season</div>
+                        </div>
+                        
+                        <div>
+                            <label style="margin: 0 0 5px 0; font-size: 12px; color: var(--text-light);">Vibe & Budget</label>
+                            <div><input type="checkbox" name="add-tags" value="Active" style="width:auto; margin-right:5px;"> Active</div>
+                            <div><input type="checkbox" name="add-tags" value="Creative" style="width:auto; margin-right:5px;"> Creative</div>
+                            <div><input type="checkbox" name="add-tags" value="Slow" style="width:auto; margin-right:5px;"> Slow</div>
+                            <div><input type="checkbox" name="add-tags" value="Other" style="width:auto; margin-right:5px;"> Other</div>
+                            <div style="margin-top: 5px; border-top: 1px dashed var(--border); padding-top: 5px;"></div>
+                            <div><input type="checkbox" name="add-tags" value="Low-Cost" style="width:auto; margin-right:5px;"> Low-Cost</div>
+                            <div><input type="checkbox" name="add-tags" value="Pricey" style="width:auto; margin-right:5px;"> Pricey</div>
+                        </div>
                     </div>
                 </div>
+                <button class="add-btn" id="btn-submit-activity" onclick="addItem()" style="margin-top: 15px; background-color: var(--primary); color: white; border: none;">Add to Database</button>
+                <button onclick="resetAllPools()" style="background-color: var(--danger); margin-top: 15px;">Reset All Pools back to Open Pool</button>
             </div>
-            <button class="add-btn" id="btn-submit-activity" onclick="addItem()" style="margin-top: 15px; background-color: var(--primary); color: white; border: none;">Add to Database</button>
-            <button onclick="resetAllPools()" style="background-color: var(--danger); margin-top: 15px;">Reset All Pools back to Open Pool</button>
 
             <h4 style="margin-top: 20px; margin-bottom: 5px;">Current Counts (Cloud-Synced):</h4>
             <div style="font-size: 13px; display: flex; gap: 15px;">
@@ -286,19 +288,18 @@
                 <span>Chosen Pool: <strong id="count-chosen">0</strong></span>
                 <span>Discarded: <strong id="count-discarded">0</strong></span>
             </div>
+            
             <h4 style="margin-top: 25px; margin-bottom: 10px;">Database View:</h4>
-
-            <button class="secondary" id="btn-toggle-db" onclick="toggleDatabaseView()" style="border-color: var(--primary); color: white; margin-bottom: 10px;">📁 See Database</button>
+            <button class="secondary" id="btn-toggle-db" onclick="toggleDatabaseView()" style="border-color: var(--primary); margin-bottom: 10px;">📁 See Database</button>
 
             <div id="db-view-panel" class="hidden">
                 <div style="margin-bottom: 12px; background: #f1f5f9; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
-                    <div style="font-size: 12px; font-weight: 600; color: #4a5568; margin-bottom: 6px;">Filter:</div>
-                    <div id="filter-pills-container">
-                        </div>
+                    <div style="font-size: 12px; font-weight: 600; color: #4a5568; margin-bottom: 6px;">Intersection Filter (Matches ALL selected tags. Select none to clear):</div>
+                    <div id="filter-pills-container"></div>
                 </div>
-                <div id="delete-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: #f8f9fa;">
-                </div>
+                <div id="delete-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: #f8f9fa;"></div>
             </div>
+        </div>
 
         <div class="config-box">
             <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleConfigPanel()">
@@ -696,6 +697,11 @@
             const item = db.openPool.find(i => i.id === itemId);
             if (!item) return;
             editingItemId = itemId;
+            document.getElementById('manage-panel').classList.remove('hidden');
+            document.getElementById('btn-toggle-manage').innerText = "🛠️ Hide Database Settings";
+
+            document.getElementById('add-name').value = item.name;
+            document.getElementById('add-desc').value = item.desc;
             document.getElementById('add-name').value = item.name;
             document.getElementById('add-desc').value = item.desc;
             document.querySelectorAll('input[name="add-tags"]').forEach(cb => cb.checked = false);
@@ -792,6 +798,19 @@
                 if(pill) pill.classList.add('active');
             }
             updateCounts(); // Re-render lists using active filters
+        }
+
+        // ADD THIS FUNCTION TO YOUR SCRIPT TAG
+        function toggleManagePanel() {
+            const panel = document.getElementById('manage-panel');
+            const button = document.getElementById('btn-toggle-manage');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden'); 
+                button.innerText = "🛠️ Hide Database Settings";
+            } else {
+                panel.classList.add('hidden'); 
+                button.innerText = "🛠️ Manage Database Settings";
+            }
         }
 
     </script>
