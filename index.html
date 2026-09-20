@@ -8,15 +8,17 @@
         @import url('https://fonts.googleapis.com/css2?family=Bitcount+Single:wght@100..900&display=swap');
 
         :root {
-            --bg-color: #5f3d25;
-            --card-bg: #a16a4b;
-            --primary: #b1c2a8;
-            --success: #54c45c;
-            --danger: #f96f5d;
-            --text: #20140d;
-            --text-light: #578f62;
-            --border: #e2e8f0;
-            --text-card-bg: #dfccca;
+            --bg-color: #a7d8ea;      /* sky-blue backdrop */
+            --card-bg: #eaf5fc;       /* misty white-blue container */
+            --primary: #4f86c6;       /* keycap blue */
+            --success: #4fb59b;       /* soft sea-green */
+            --danger: #e5534b;        /* contrasting red */
+            --text: #1e3557;          /* deep ocean navy */
+            --text-light: #4f7396;
+            --border: #c3dbee;
+            --text-card-bg: #f7fbff;
+            --lavender: #8b83d6;      /* postcard purple accent */
+            --lavender-soft: #e4e6fb;
         }
 
         body {
@@ -24,7 +26,7 @@
             font-optical-sizing: auto;
             font-weight: 300;
             font-style: normal;
-            background-color: var(--bg-color);
+            background: linear-gradient(160deg, #b9e3f0 0%, #a7d8ea 45%, #c9d9f5 100%) fixed;
             color: var(--text);
             margin: 0;
             padding: 20px;
@@ -38,7 +40,7 @@
             background: var(--card-bg);
             padding: 30px;
             border-radius: 24px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 8px 24px rgba(79,134,198,0.18);
         }
 
         h1, h2, h3 { 
@@ -87,16 +89,16 @@
             opacity: 0.9; 
         }
         button:disabled { 
-            background-color: #a8b6c7; 
+            background-color: #b7c9dc; 
             cursor: not-allowed; 
         }
         button.secondary { 
-            background-color: var(--primary); 
-            color: var(--border); 
+            background-color: #d6e8f7; 
+            color: #2f5d8f; 
             border: 1px solid var(--border); 
         }
         button.secondary:hover { 
-            background: #8fa6bd; 
+            background: #c3dcf2; 
         }
         .btn-group { 
             display: flex; 
@@ -105,7 +107,7 @@
         }
 
         .prompt-box {
-            background: #dcffeb; 
+            background: #e6ebff; 
             border-left: 4px solid var(--primary); 
             padding: 15px; 
             border-radius: 0 8px 8px 0; 
@@ -125,23 +127,23 @@
         }
         .item-card:hover { 
             transform: translateY(-2px); 
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05); 
+            box-shadow: 0 4px 8px rgba(79,134,198,0.15); 
             border-color: var(--primary); 
         }
         .tag-badge { 
             display: inline-block; 
-            background: #ffffff; 
+            background: var(--lavender-soft); 
             padding: 2px 8px; 
             border-radius: 12px; 
             font-size: 12px; 
             margin-right: 5px; 
             margin-top: 5px; 
-            color: var(--bg-color); 
+            color: #3d4f8f; 
         }
 
         .config-box { 
             background: var(--card-bg); 
-            border: 1px solid #fcf3cf; 
+            border: 1px solid var(--border); 
             padding: 15px; 
             border-radius: 8px; 
             margin-bottom: 20px; 
@@ -153,8 +155,8 @@
             padding: 4px 10px;
             margin: 2px;
             font-size: 12px;
-            background-color: #e2e8f0;
-            color: #4a5568;
+            background-color: #d6e8f7;
+            color: #3d5a80;
             border-radius: 16px;
             cursor: pointer;
             user-select: none;
@@ -162,7 +164,7 @@
             border: 1px solid transparent;
         }
         .filter-pill.active {
-            background-color: var(--bg-color);
+            background-color: var(--primary);
             color: white;
         }
 
@@ -174,7 +176,7 @@
             margin-bottom: 15px; 
             font-weight: 600; 
         }
-        #sync-status.syncing { color: #e0b188; }
+        #sync-status.syncing { color: var(--lavender); }
         #sync-status.success { color: var(--success); }
     </style>
 </head>
@@ -231,7 +233,7 @@
         <div id="screen-detail" class="section hidden">
             <h2>Activity Details</h2>
             
-            <div style="background: var(--text-card-bg); border: 1px solid var(--border); border-left: 5px solid var(--primary); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <div style="background: var(--text-card-bg); border: 1px solid var(--border); border-left: 5px solid var(--primary); padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(79,134,198,0.1);">
                 <h3 id="detail-title" style="margin-bottom: 10px; color: var(--text);">Activity Title</h3>
                 <div style="margin-bottom: 15px;" id="detail-tags"></div>
                 <p id="detail-desc" style="line-height: 1.5; color: var(--text); font-size: 16px; margin: 0;">Description goes here...</p>
@@ -293,17 +295,17 @@
             <button class="secondary" id="btn-toggle-db" onclick="toggleDatabaseView()" style="border-color: var(--primary); margin-bottom: 10px;">📁 See Database</button>
 
             <div id="db-view-panel" class="hidden">
-                <div style="margin-bottom: 12px; background: #f1f5f9; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
-                    <div style="font-size: 12px; font-weight: 600; color: #4a5568; margin-bottom: 6px;">Intersection Filter (Matches ALL selected tags. Select none to clear):</div>
+                <div style="margin-bottom: 12px; background: #eef6fc; padding: 10px; border-radius: 6px; border: 1px solid var(--border);">
+                    <div style="font-size: 12px; font-weight: 600; color: #3d5a80; margin-bottom: 6px;">Intersection Filter (Matches ALL selected tags. Select none to clear):</div>
                     <div id="filter-pills-container"></div>
                 </div>
-                <div id="delete-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: #f8f9fa;"></div>
+                <div id="delete-list-container" style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border); padding: 10px; border-radius: 6px; background: #f7fbff;"></div>
             </div>
         </div>
 
         <div class="config-box">
             <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="toggleConfigPanel()">
-                <strong style="background: var(--card-bg); color: #242116;">⚙️ Database Connection Settings</strong>
+                <strong style="background: var(--card-bg); color: var(--text);">⚙️ Database Connection Settings</strong>
                 <span id="config-toggle-arrow">▶</span>
             </div>
             <div id="config-inputs-container" class="hidden">
@@ -316,7 +318,7 @@
                 <label>Personal Access Token</label>
                 <input type="password" id="cfg-token" placeholder="github_pat_...">
                 
-                <button onclick="saveConfigCredentials()" style="background: var(--bg-color); margin-top: 15px;">Connect & Sync Database</button>
+                <button onclick="saveConfigCredentials()" style="background: var(--primary); margin-top: 15px;">Connect & Sync Database</button>
             </div>
         </div>
     </div>
@@ -521,14 +523,14 @@
                 row.style.justifyContent = 'space-between';
                 row.style.alignItems = 'center';
                 row.style.padding = '8px 0';
-                row.style.borderBottom = '1px solid #e2e8f0';
+                row.style.borderBottom = '1px solid #c3dcee';
                 row.style.fontSize = '14px';
 
                 row.innerHTML = `
                     <span style="font-weight: 500; padding-right: 10px;">${item.name}</span>
                     <div style="display: flex; gap: 5px; flex-shrink: 0;">
                         <button onclick="viewItemDetailFromList(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: var(--primary);">View</button>
-                        <button onclick="prepareEditItem(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: #f39c12; color: white;">Edit</button>
+                        <button onclick="prepareEditItem(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: var(--lavender); color: white;">Edit</button>
                         <button onclick="deleteItemFromServer(${item.id})" style="width: auto; margin: 0; padding: 4px 10px; font-size: 12px; background-color: var(--danger);">Delete</button>
                     </div>
                 `;
@@ -650,7 +652,7 @@
             currentlyViewingItem = item;
             document.getElementById('detail-title').innerText = item.name;
             document.getElementById('detail-desc').innerText = item.desc || "No description.";
-            document.getElementById('detail-tags').innerHTML = item.tags.map(t => `<span class="tag-badge" style="background:#4a90e2; color:white;">${t}</span>`).join('');
+            document.getElementById('detail-tags').innerHTML = item.tags.map(t => `<span class="tag-badge" style="background:var(--lavender); color:white;">${t}</span>`).join('');
             showScreen('detail');
         }
 
@@ -711,7 +713,7 @@
             });
             const submitBtn = document.getElementById('btn-submit-activity');
             submitBtn.innerText = "💾 Save Changes to Item";
-            submitBtn.style.backgroundColor = "#2980b9";
+            submitBtn.style.backgroundColor = "#6c63c7";
             document.getElementById('add-name').scrollIntoView({ behavior: 'smooth' });
         }
 
